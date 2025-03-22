@@ -1,5 +1,5 @@
 using System;
-using FPGAMod;
+using fpgamod;
 using HarmonyLib;
 using StationeersMods.Interface;
 [StationeersMod("FPGAMod","FPGAMod [StationeersMods]","0.2.4657.21547.1")]

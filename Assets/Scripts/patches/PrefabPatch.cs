@@ -5,7 +5,7 @@ using HarmonyLib;
 using StationeersMods.Interface;
 using UnityEngine;
 using UnityEngine.Rendering;
-namespace FPGAMod
+namespace fpgamod
 {
     [HarmonyPatch]
     public class PrefabPatch

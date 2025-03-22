@@ -1,6 +1,6 @@
 {
     "name": "FPGAMod",
-    "rootNamespace": "FPGAMod",
+    "rootNamespace": "fpgamod",
     "references": [
         "GUID:343deaaf83e0cee4ca978e7df0b80d21"
     ],
