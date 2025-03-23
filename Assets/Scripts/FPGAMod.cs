@@ -2,6 +2,8 @@ using System;
 using fpgamod;
 using HarmonyLib;
 using StationeersMods.Interface;
+using Assets.Scripts.Objects;
+using UnityEngine;
 [StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.2.4657.21547.1")]
 public class FPGAMod : ModBehaviour
 {
@@ -20,6 +22,7 @@ public class FPGAMod : ModBehaviour
     Harmony harmony = new Harmony("FPGAMod");
     PrefabPatch.prefabs = contentHandler.prefabs;
     harmony.PatchAll();
-    UnityEngine.Debug.Log("FPGAMod Loaded with " + contentHandler.prefabs.Count + " prefab(s)");
+
+    Debug.Log("FPGAMod Loaded with " + contentHandler.prefabs.Count + " prefab(s)");
   }
 }

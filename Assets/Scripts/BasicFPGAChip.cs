@@ -5,8 +5,8 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts;
-using Assets.Scripts.Objects.Motherboards;
 using System;
+using StationeersMods.Interface;
 
 namespace fpgamod
 {
@@ -16,14 +16,31 @@ namespace fpgamod
     IMemoryReadable,
     IMemoryWritable,
     ILogicStack,
-    IInstructable
+    IInstructable,
+    IPatchOnLoad
   {
+    public const int STACK_OFFSET = 64;
     public const int STACK_SIZE = 64;
+    public const Slot.Class FPGASlotType = (Slot.Class)0x69;
 
     private readonly LogicStack _stack = new LogicStack(STACK_SIZE);
     private readonly Gate[] _gates = new Gate[STACK_SIZE];
     private bool _inputDirty = true;
     private long _lastEvalIndex = -1;
+
+    private IFPGAInput _Input => this.ParentSlot?.Parent as IFPGAInput;
+
+    public void PatchOnLoad()
+    {
+      this.SlotType = FPGASlotType;
+      this.Thumbnail = StationeersModsUtility.FindPrefab("ItemIntegratedCircuit10").Thumbnail;
+    }
+
+    public override void DeserializeSave(ThingSaveData saveData)
+    {
+      base.DeserializeSave(saveData);
+      this.Recompile();
+    }
 
     public int GetStackSize()
     {
@@ -32,7 +49,11 @@ namespace fpgamod
 
     public double ReadMemory(int address)
     {
-      return this._stack[address];
+      if (address >= STACK_OFFSET)
+      {
+        return this._stack[address - STACK_OFFSET];
+      }
+      return this.ReadGateValue(address);
     }
 
     public void ClearMemory()
@@ -43,7 +64,7 @@ namespace fpgamod
 
     public void WriteMemory(int address, double value)
     {
-      this._stack[address] = value;
+      this._stack[address - STACK_OFFSET] = value;
       this.Recompile();
     }
 
@@ -68,8 +89,13 @@ namespace fpgamod
       this._inputDirty = true;
     }
 
-    public double ReadGateValue(int index, IFPGAInput input)
+    private double ReadGateValue(int index)
     {
+      var input = this._Input;
+      if (input == null)
+      {
+        return double.NaN;
+      }
       var evalIndex = this._lastEvalIndex;
       if (this._inputDirty)
       {
@@ -93,27 +119,32 @@ namespace fpgamod
       var visited = new bool[STACK_SIZE];
       var circular = new bool[STACK_SIZE];
       var inputGates = new Dictionary<int, Gate>();
+      var errGate = new ConstantGate(double.NaN);
       Func<int, Gate> getGate = index =>
       {
-        if (index < STACK_SIZE)
+        if (index < 0 || index >= STACK_OFFSET + STACK_SIZE)
         {
-          return this._gates[index];
+          return errGate;
+        }
+        if (index >= STACK_OFFSET)
+        {
+          return this._gates[index - STACK_OFFSET];
         }
         if (!inputGates.ContainsKey(index))
         {
-          inputGates[index] = new InputGate(index - STACK_SIZE);
+          inputGates[index] = new InputGate(index);
         }
         return inputGates[index];
       };
       Action<int> markCircular = index =>
       {
         circular[index] = true;
-        this._gates[index] = new ConstantGate(double.NaN);
+        this._gates[index] = errGate;
       };
       Func<int, bool> buildGate = null;
       buildGate = index =>
       {
-        if (index >= STACK_SIZE)
+        if (index < 0 || index >= STACK_SIZE)
         {
           return false;
         }
@@ -130,9 +161,9 @@ namespace fpgamod
         var (op, g0, g1) = parsed[index];
         var inst = (Instruction)op;
         Gate gate0 = null, gate1 = null;
-        if (inst >= Instruction.Ceil && inst < Instruction.Add)
+        if (inst >= Instruction.Ceil && inst <= Instruction.BitSrl)
         {
-          if (buildGate(g0))
+          if (buildGate(g0 - STACK_OFFSET))
           {
             markCircular(index);
             return true;
@@ -141,7 +172,7 @@ namespace fpgamod
         }
         if (inst >= Instruction.Ceil && inst <= Instruction.BitSrl)
         {
-          if (buildGate(g1))
+          if (buildGate(g1 - STACK_OFFSET))
           {
             markCircular(index);
             return true;
@@ -162,7 +193,10 @@ namespace fpgamod
     {
       if (inst == Instruction.Constant)
       {
-        return new ConstantGate(this._stack[g0]);
+        if (g0 < STACK_OFFSET || g0 - STACK_OFFSET >= STACK_SIZE) {
+          return new ConstantGate(double.NaN);
+        }
+        return new ConstantGate(this._stack[g0 - STACK_OFFSET]);
       }
       if (inst >= Instruction.Ceil && inst < Instruction.Add)
       {
@@ -198,6 +232,7 @@ namespace fpgamod
     {
       return (val1, val2) => ProgrammableChip.LongToDouble(op(ProgrammableChip.DoubleToLong(val1, firstSigned), ProgrammableChip.DoubleToLong(val2, true)));
     }
+
     private static Dictionary<Instruction, Func<double, double, double>> binaryOps = new()
     {
       [Instruction.Add] = (val1, val2) => val1 + val2,
@@ -235,7 +270,7 @@ namespace fpgamod
 
     public static readonly EnumCollection<Instruction, byte> Instructions = new EnumCollection<Instruction, byte>();
     // gate instruction value (by byte low-high): [op] [g0] [g1] [unused]x5
-    // g0 and g1 point to other gates when <64, and input pin+64 when >=64
+    // g0 and g1 point to inputs when <64, and other gates when >=64
     public enum Instruction : byte
     {
       // read ops

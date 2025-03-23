@@ -21,10 +21,13 @@ namespace fpgamod
         {
           Thing thing = gameObject.GetComponent<Thing>();
           // Additional patching goes here, like setting references to materials(colors) or tools from the game
+          if (thing is IPatchOnLoad patchable) {
+            patchable.PatchOnLoad();
+          }
           if (thing != null)
           {
             Debug.Log(gameObject.name + " added to WorldManager");
-            WorldManager.Instance.SourcePrefabs.Add(thing);
+            WorldManager.Instance.AddPrefab(thing);
           }
         }
       }
