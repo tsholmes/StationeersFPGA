@@ -18,7 +18,8 @@ namespace fpgamod
     IFPGAInput,
     IPatchOnLoad
   {
-    private readonly double[] _inputValues = new double[64];
+    private readonly double[] _inputValues = new double[BasicFPGAChip.MEMORY_MAPPING.InputCount];
+    private long _inputModCount = 0;
 
     private Slot _FPGASlot => this.Slots[0];
     private BasicFPGAChip FPGAChip => this._FPGASlot.Get<BasicFPGAChip>();
@@ -54,17 +55,10 @@ namespace fpgamod
 
     public void WriteMemory(int address, double value)
     {
-      if (address < 64) {
-        if (address < 0) {
-          throw new StackUnderflowException();
-        }
-        if (address > 7) {
-          throw new StackOverflowException();
-        }
+      var addr = BasicFPGAChip.MEMORY_MAPPING.LookupWrite(address);
+      if (addr.Section == FPGAGate.AddressSection.IO) {
         this._inputValues[address] = value;
-        if (this.FPGAChip != null) {
-          this.FPGAChip.MarkInputDirty();
-        }
+        this._inputModCount++;
         return;
       }
       if (this.FPGAChip == null) {
@@ -75,10 +69,15 @@ namespace fpgamod
 
     public double GetFPGAInputPin(int index)
     {
-      if (index < 0 || index > 7) {
+      if (index < 0 || index > BasicFPGAChip.MEMORY_MAPPING.InputCount) {
         return double.NaN;
       }
       return this._inputValues[index];
+    }
+
+    public long GetFPGAInputModCount()
+    {
+      return this._inputModCount;
     }
   }
 }
