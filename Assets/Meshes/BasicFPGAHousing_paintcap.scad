@@ -1,4 +1,4 @@
-include <BasicFPGAHousing_shared.scad>;
+include <FPGA_shared.scad>;
 use <BasicFPGAHousing_base.scad>;
 
 module BasicFPGAHousing_paintcap() {

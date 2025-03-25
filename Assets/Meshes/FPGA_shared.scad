@@ -18,27 +18,23 @@ slotPinEdgeSpacing = 0.045;
 slotPinSize = 0.025;
 slotPinDepth = 0.025;
 eps = 0.00001;
-
-module BasiFPGAHousing_chipcutout() {
-  slotPinBaseOffset = (-slotPinEdgeCount-1)/2 * slotPinEdgeSpacing;
-  slotPinEdgeOffset = slotSize/2 - slotPinSize/2 - slotPinEdgePad;
-  union() {
-    translate([0, 0, baseDepth/2 + slotBottom + slotPinDepth]) {
-      cube(size=[slotSize, slotSize, baseDepth], center=true);
-    }
-    for(edge=[1:4]) rotate([0,0,90*edge]) {
-      for(i=[1:slotPinEdgeCount]) {
-        translate([
-          slotPinBaseOffset + slotPinEdgeSpacing*i,
-          slotPinEdgeOffset,
-          slotBottom + slotPinDepth
-        ]) {
-          cube(size=[slotPinSize, slotPinSize, slotPinDepth*2], center=true);
-        }
-      }
-    }
-  }
-}
+chipTotalSize = slotSize - slotPinEdgePad*2 - slotPinSize/2;
+chipTotalHeight = 0.1;
+chipBaseHeight = 0.05;
+pinHorizLength = 0.022;
+pinHorizUnderLength = 0.008;
+pinHorizWidth = 0.02;
+pinHorizHeight = 0.015;
+pinVertInnerOffset = 0.003;
+pinVertOuterOffset = 0.003;
+pinVertNarrowOffset = 0.003;
+pinTotalHeight = chipTotalHeight - chipBaseHeight/2 + pinHorizHeight/2;
+chipBaseSize = chipTotalSize - pinHorizLength*2;
+chipBaseBevelSize = 0.005;
+alignHoleRadius = 0.005;
+alignHoleOffset = chipBaseSize/2 - 0.02;
+alignHoleDepth = 0.005;
+alignHoleSides = 8;
 
 module cablecutout() {
   cableradius = 0.025;

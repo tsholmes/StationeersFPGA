@@ -17,7 +17,8 @@ namespace fpgamod
     IMemoryWritable,
     ILogicStack,
     IInstructable,
-    IPatchOnLoad
+    IPatchOnLoad,
+    ICustomUV
   {
     public const int INPUT_COUNT = 64;
     public const int GATE_COUNT = 64;
@@ -35,6 +36,14 @@ namespace fpgamod
     {
       this.SlotType = FPGASlotType;
       this.Thumbnail = StationeersModsUtility.FindPrefab("ItemIntegratedCircuit10").Thumbnail;
+    }
+
+    public Vector2? GetUV(GameObject obj)
+    {
+      if (obj == this.transform.Find("BasicFPGAChip_pins/default").gameObject) {
+        return FPGAMod.UVTile(64, 3, 7); // roughly match ic10 pins
+      }
+      return null;
     }
 
     public override void DeserializeSave(ThingSaveData saveData)
