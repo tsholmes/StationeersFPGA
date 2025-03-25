@@ -16,7 +16,8 @@ namespace fpgamod
     IMemoryReadable,
     IMemoryWritable,
     IFPGAInput,
-    IPatchOnLoad
+    IPatchOnLoad,
+    ICustomUV
   {
     private readonly double[] _inputValues = new double[BasicFPGAChip.MEMORY_MAPPING.InputCount];
     private long _inputModCount = 0;
@@ -29,6 +30,20 @@ namespace fpgamod
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
       this.Thumbnail = StationeersModsUtility.FindPrefab("StructureCircuitHousing").Thumbnail;
       this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
+    }
+
+    public Vector2? GetUV(GameObject obj)
+    {
+      if (obj == this.transform.Find("BasicFPGAHousing_base/default").gameObject) {
+        return FPGAMod.UVTile(16, 0, 6); // match IC housing base
+      }
+      if (obj == this.transform.Find("PowerSymbol/default").gameObject) {
+        return FPGAMod.UVTile(16, 2, 5); // match builtin power symbol
+      }
+      if (obj == this.transform.Find("DataSymbol/default").gameObject) {
+        return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
+      }
+      return null;
     }
 
     public void ClearMemory()
