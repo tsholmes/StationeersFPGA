@@ -22,17 +22,22 @@ namespace fpgamod
         foreach (var gameObject in prefabs)
         {
           Thing thing = gameObject.GetComponent<Thing>();
-          // Additional patching goes here, like setting references to materials(colors) or tools from the game
-          if (thing is IPatchOnLoad patchable) {
+          if (thing == null)
+          {
+            continue;
+          }
+          var doMatPatch = true;
+          if (thing is IPatchOnLoad patchable)
+          {
             patchable.PatchOnLoad();
+            doMatPatch = !patchable.SkipMaterialPatch();
           }
           Blueprintify(thing);
-          FixMaterials(thing);
-          if (thing != null)
+          if (doMatPatch)
           {
-            Debug.Log(gameObject.name + " added to WorldManager");
-            WorldManager.Instance.AddPrefab(thing);
+            FixMaterials(thing);
           }
+          WorldManager.Instance.AddPrefab(thing);
         }
       }
       catch (Exception ex)
@@ -44,12 +49,15 @@ namespace fpgamod
 
     private static GameObject blueprintContainer;
 
-    private static void Blueprintify(Thing thing) {
-      if (thing.Blueprint != null) {
+    private static void Blueprintify(Thing thing)
+    {
+      if (thing.Blueprint != null)
+      {
         return; // don't overwrite if we get around to making manual blueprints
       }
 
-      if (blueprintContainer == null) {
+      if (blueprintContainer == null)
+      {
         blueprintContainer = new GameObject("~Blueprints");
         UnityEngine.Object.DontDestroyOnLoad(blueprintContainer);
         blueprintContainer.SetActive(false);
@@ -90,12 +98,15 @@ namespace fpgamod
       {"ColorPur", StationeersColor.PURPLE},
     };
 
-    private static void FixMaterials(Thing thing) {
+    private static void FixMaterials(Thing thing)
+    {
       var custom = thing as fpgamod.ICustomUV;
       var defaultUV = FPGAMod.UVTile(4, 3, 3); // top corner solid color by default
-      foreach (var renderer in thing.GetComponentsInChildren<MeshRenderer>()) {
+      foreach (var renderer in thing.GetComponentsInChildren<MeshRenderer>())
+      {
         var mats = renderer.sharedMaterials;
-        for (var i = 0; i < mats.Length; i++) {
+        for (var i = 0; i < mats.Length; i++)
+        {
           mats[i] = MatchMaterial(mats[i]);
         }
         renderer.sharedMaterials = mats;
@@ -103,15 +114,18 @@ namespace fpgamod
         var mesh = renderer.GetComponent<MeshFilter>().mesh;
         FPGAMod.PatchMeshUV(mesh, custom?.GetUV(renderer.gameObject) ?? defaultUV);
       }
-      if (thing.PaintableMaterial != null) {
+      if (thing.PaintableMaterial != null)
+      {
         thing.PaintableMaterial = MatchMaterial(thing.PaintableMaterial);
       }
     }
 
-    private static Material MatchMaterial(Material mat) {
+    private static Material MatchMaterial(Material mat)
+    {
       var key = mat.name[..8];
       StationeersColor match;
-      if (!MATERIAL_MAP.TryGetValue(key, out match)) {
+      if (!MATERIAL_MAP.TryGetValue(key, out match))
+      {
         return mat;
       }
       return StationeersModsUtility.GetMaterial(match, ShaderType.NORMAL);
