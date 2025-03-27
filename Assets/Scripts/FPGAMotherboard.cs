@@ -41,8 +41,7 @@ namespace fpgamod
 
     public void OnEdit()
     {
-      ImGuiFPGAEditor.Motherboard = this;
-      ImGuiFPGAEditor.ShowEditor(true);
+      ImGuiFPGAEditor.ShowEditor(this);
     }
   }
 }

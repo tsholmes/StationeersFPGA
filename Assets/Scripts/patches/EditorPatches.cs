@@ -33,7 +33,7 @@ namespace fpgamod
       [HarmonyPatch(nameof(InputWindowBase.Cancel))]
       static void Cancel()
       {
-        ImGuiFPGAEditor.ShowEditor(false);
+        ImGuiFPGAEditor.HideEditor();
       }
     }
   }

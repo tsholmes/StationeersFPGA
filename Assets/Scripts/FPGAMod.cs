@@ -7,6 +7,9 @@ using UnityEngine;
 [StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.2.4657.21547.1")]
 public class FPGAMod : ModBehaviour
 {
+  [SerializeField]
+  public GameObject UIBlocker;
+
   // private ConfigEntry<bool> configBool;
 
   public override void OnLoaded(ContentHandler contentHandler)
@@ -26,6 +29,8 @@ public class FPGAMod : ModBehaviour
     {
       Debug.Log(m.FullDescription());
     }
+
+    ImGuiFPGAEditor.UIBlocker = UIBlocker;
 
     Debug.Log("FPGAMod Loaded with " + contentHandler.prefabs.Count + " prefab(s)");
   }
