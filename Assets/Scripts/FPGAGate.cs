@@ -142,11 +142,13 @@ namespace fpgamod
       public int LookupOffset => this.GateOffset + this.GateCount;
       public int TotalSize => this.LookupOffset + this.LookupCount;
 
-      public Address LookupRead(int address) {
+      public Address LookupRead(int address)
+      {
         return this.Lookup(address, true);
       }
 
-      public Address LookupWrite(int address) {
+      public Address LookupWrite(int address)
+      {
         return this.Lookup(address, false);
       }
 
@@ -158,10 +160,12 @@ namespace fpgamod
         }
         if (address < this.GateOffset)
         {
-          if (!read && address >= this.InputCount) { // write input values
+          if (!read && address >= this.InputCount)
+          { // write input values
             return new Address(AddressSection.Invalid, 0);
           }
-          if (read && address >= this.GateCount) { // read gate outputs
+          if (read && address >= this.GateCount)
+          { // read gate outputs
             return new Address(AddressSection.Invalid, 0);
           }
           return new Address(AddressSection.IO, address);
@@ -264,22 +268,63 @@ namespace fpgamod
       // binary boolean ops
       LogicAnd,
       LogicOr,
-      LogicXor,
-      LogicNand,
-      LogicNor,
-      LogicXnor,
       // binary bit ops
       BitAnd,
       BitOr,
       BitXor,
       BitNand,
       BitNor,
-      BitXnor,
       BitSla,
       BitSll,
       BitSra,
       BitSrl,
     }
+
+    public static Dictionary<Instruction, string> InstructionSymbols = new()
+    {
+      [Instruction.None] = "none",
+      [Instruction.Ceil] = "ceil",
+      [Instruction.Floor] = "floor",
+      [Instruction.Abs] = "abs",
+      [Instruction.Log] = "log",
+      [Instruction.Exp] = "exp",
+      [Instruction.Round] = "round",
+      [Instruction.Sqrt] = "sqrt",
+      [Instruction.Sin] = "sin",
+      [Instruction.Cos] = "cos",
+      [Instruction.Tan] = "tan",
+      [Instruction.Asin] = "asin",
+      [Instruction.Acos] = "acos",
+      [Instruction.Atan] = "atan",
+      [Instruction.LogicNot] = "!",
+      [Instruction.BitNot] = "~",
+      [Instruction.Add] = "+",
+      [Instruction.Subtract] = "-",
+      [Instruction.Multiply] = "*",
+      [Instruction.Divide] = "/",
+      [Instruction.Mod] = "%",
+      [Instruction.Atan2] = "atan2",
+      [Instruction.Pow] = "pow",
+      [Instruction.Less] = "<",
+      [Instruction.LessEquals] = "<=",
+      [Instruction.Equals] = "==",
+      [Instruction.GreaterEquals] = ">=",
+      [Instruction.Greater] = ">",
+      [Instruction.NotEquals] = "!=",
+      [Instruction.Min] = "min",
+      [Instruction.Max] = "max",
+      [Instruction.LogicAnd] = "&&",
+      [Instruction.LogicOr] = "||",
+      [Instruction.BitAnd] = "&",
+      [Instruction.BitOr] = "|",
+      [Instruction.BitXor] = "^",
+      [Instruction.BitNand] = "nand",
+      [Instruction.BitNor] = "nor",
+      [Instruction.BitSla] = "sla",
+      [Instruction.BitSll] = "sll",
+      [Instruction.BitSra] = "sra",
+      [Instruction.BitSrl] = "srl",
+    };
 
     private static Dictionary<Instruction, Func<double, double>> unaryOps = new()
     {
@@ -324,16 +369,11 @@ namespace fpgamod
       [Instruction.Max] = (val1, val2) => val1 > val2 ? val1 : val2,
       [Instruction.LogicAnd] = (val1, val2) => val1 != 0 && val2 != 0 ? 1 : 0,
       [Instruction.LogicOr] = (val1, val2) => val1 != 0 || val2 != 0 ? 1 : 0,
-      [Instruction.LogicXor] = (val1, val2) => (val1 != 0) != (val2 != 0) ? 1 : 0,
-      [Instruction.LogicNand] = (val1, val2) => val1 == 0 || val2 == 0 ? 1 : 0,
-      [Instruction.LogicNor] = (val1, val2) => val1 == 0 && val2 == 0 ? 1 : 0,
-      [Instruction.LogicXnor] = (val1, val2) => (val1 == 0) == (val2 == 0) ? 1 : 0,
       [Instruction.BitAnd] = makeBinaryBitOp((val1, val2) => val1 & val2),
       [Instruction.BitOr] = makeBinaryBitOp((val1, val2) => val1 | val2),
       [Instruction.BitXor] = makeBinaryBitOp((val1, val2) => val1 ^ val2),
       [Instruction.BitNand] = makeBinaryBitOp((val1, val2) => ~(val1 & val2)),
       [Instruction.BitNor] = makeBinaryBitOp((val1, val2) => ~(val1 | val2)),
-      [Instruction.BitXnor] = makeBinaryBitOp((val1, val2) => ~(val1 ^ val2)),
       [Instruction.BitSla] = makeBinaryBitOp((val1, val2) => val1 << (int)val2),
       [Instruction.BitSll] = makeBinaryBitOp((val1, val2) => val1 << (int)val2),
       [Instruction.BitSra] = makeBinaryBitOp((val1, val2) => val1 >> (int)val2),
