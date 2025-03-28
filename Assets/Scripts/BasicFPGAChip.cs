@@ -15,20 +15,25 @@ namespace fpgamod
     IMemory,
     IMemoryReadable,
     IMemoryWritable,
-    ILogicStack,
-    IInstructable,
     IPatchOnLoad,
     ICustomUV
   {
-    public const int INPUT_COUNT = 64;
-    public const int GATE_COUNT = 64;
-    public const int LUT_COUNT = 64;
-    public static readonly FPGAGate.MemoryMapping MEMORY_MAPPING = new(INPUT_COUNT, GATE_COUNT, LUT_COUNT);
 
     public const Slot.Class FPGASlotType = (Slot.Class)0x69;
 
-    private readonly LogicStack _stack = new LogicStack(GATE_COUNT + LUT_COUNT);
-    private readonly FPGAGate[] _gates = new FPGAGate[GATE_COUNT];
+    private FPGADef _def = FPGADef.NewEmpty();
+    public string RawConfig
+    {
+      get => this._def.GetRaw();
+      set
+      {
+        this._def = FPGADef.Parse(value);
+        this.Recompile();
+        // TODO: mark for network update
+      }
+    }
+
+    private readonly FPGAGate[] _gates = new FPGAGate[FPGADef.GateCount];
 
     private IFPGAInput _Input => this.ParentSlot?.Parent as IFPGAInput;
 
@@ -40,7 +45,8 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAChip_pins/default").gameObject) {
+      if (obj == this.transform.Find("BasicFPGAChip_pins/default").gameObject)
+      {
         return FPGAMod.UVTile(64, 3, 7); // roughly match ic10 pins
       }
       return null;
@@ -54,61 +60,65 @@ namespace fpgamod
 
     public int GetStackSize()
     {
-      return GATE_COUNT + LUT_COUNT;
+      return FPGADef.AddressCount;
     }
 
     public double ReadMemory(int address)
     {
-      var addr = MEMORY_MAPPING.LookupRead(address);
       if (address < 0)
       {
         throw new StackUnderflowException();
       }
-      switch (addr.Section)
+      if (address > 255)
       {
-        case FPGAGate.AddressSection.IO:
-          return this.ReadGateValue(addr.Offset);
-        case FPGAGate.AddressSection.Gate | FPGAGate.AddressSection.LUT:
-          return this._stack[address - MEMORY_MAPPING.GateOffset];
-        default:
-          throw new StackOverflowException();
+        throw new StackOverflowException();
       }
+      var addr = (byte)address;
+      if (FPGADef.IsIOAddress(addr))
+      {
+        return this.ReadGateValue(addr);
+      }
+      if (FPGADef.IsGateAddress(addr) || FPGADef.IsLutAddress(addr))
+      {
+        return this._def.ReadRawValue(addr);
+      }
+      throw new StackOverflowException();
     }
 
     public void ClearMemory()
     {
-      this._stack.Clear();
-      this.Recompile();
+      this.RawConfig = "";
     }
 
     public void WriteMemory(int address, double value)
     {
-      if (address < MEMORY_MAPPING.GateOffset)
+      if (address < 0)
       {
         throw new StackUnderflowException();
       }
-      if (address >= MEMORY_MAPPING.TotalSize)
+      if (address > 255)
+      {
+        throw new StackUnderflowException();
+      }
+      var addr = (byte)address;
+      if (FPGADef.IsIOAddress(addr))
+      {
+        throw new StackUnderflowException();
+      }
+      else if (FPGADef.IsGateAddress(addr))
+      {
+        this._def.SetGateRaw(addr, ProgrammableChip.DoubleToLong(value, true));
+        this.Recompile();
+      }
+      else if (FPGADef.IsLutAddress(addr))
+      {
+        this._def.SetLutValue(addr, value);
+        this.Recompile();
+      }
+      else
       {
         throw new StackOverflowException();
       }
-      this._stack[address - MEMORY_MAPPING.GateOffset] = value;
-      this.Recompile();
-    }
-
-    public LogicStack GetLogicStack()
-    {
-      return _stack;
-    }
-
-    public IEnumCollection GetInstructions()
-    {
-      return FPGAGate.Instructions;
-    }
-
-    public string GetInstructionDescription(int i)
-    {
-      // TODO
-      return "";
     }
 
     private double ReadGateValue(int index)
@@ -118,7 +128,7 @@ namespace fpgamod
 
     private void Recompile()
     {
-      FPGAGate.Compile(this._stack, MEMORY_MAPPING, this._gates);
+      FPGAGate.Compile(this._def, this._gates);
     }
   }
 }

@@ -19,7 +19,7 @@ namespace fpgamod
     IPatchOnLoad,
     ICustomUV
   {
-    private readonly double[] _inputValues = new double[BasicFPGAChip.MEMORY_MAPPING.InputCount];
+    private readonly double[] _inputValues = new double[FPGADef.InputCount];
     private long _inputModCount = 0;
 
     private Slot _FPGASlot => this.Slots[0];
@@ -34,13 +34,16 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAHousing_base/default").gameObject) {
+      if (obj == this.transform.Find("BasicFPGAHousing_base/default").gameObject)
+      {
         return FPGAMod.UVTile(16, 0, 6); // match IC housing base
       }
-      if (obj == this.transform.Find("PowerSymbol/default").gameObject) {
+      if (obj == this.transform.Find("PowerSymbol/default").gameObject)
+      {
         return FPGAMod.UVTile(16, 2, 5); // match builtin power symbol
       }
-      if (obj == this.transform.Find("DataSymbol/default").gameObject) {
+      if (obj == this.transform.Find("DataSymbol/default").gameObject)
+      {
         return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
       }
       return null;
@@ -48,7 +51,8 @@ namespace fpgamod
 
     public void ClearMemory()
     {
-      if (this.FPGAChip == null) {
+      if (this.FPGAChip == null)
+      {
         throw new NullReferenceException();
       }
       this.FPGAChip.ClearMemory();
@@ -62,7 +66,8 @@ namespace fpgamod
 
     public double ReadMemory(int address)
     {
-      if (this.FPGAChip == null) {
+      if (this.FPGAChip == null)
+      {
         throw new NullReferenceException();
       }
       return this.FPGAChip.ReadMemory(address);
@@ -70,13 +75,23 @@ namespace fpgamod
 
     public void WriteMemory(int address, double value)
     {
-      var addr = BasicFPGAChip.MEMORY_MAPPING.LookupWrite(address);
-      if (addr.Section == FPGAGate.AddressSection.IO) {
+      if (address < 0)
+      {
+        throw new StackUnderflowException();
+      }
+      if (address > 255)
+      {
+        throw new StackOverflowException();
+      }
+      var addr = (byte)address;
+      if (FPGADef.IsIOAddress(addr))
+      {
         this._inputValues[address] = value;
         this._inputModCount++;
         return;
       }
-      if (this.FPGAChip == null) {
+      if (this.FPGAChip == null)
+      {
         throw new NullReferenceException();
       }
       this.FPGAChip.WriteMemory(address, value);
@@ -84,7 +99,8 @@ namespace fpgamod
 
     public double GetFPGAInputPin(int index)
     {
-      if (index < 0 || index > BasicFPGAChip.MEMORY_MAPPING.InputCount) {
+      if (index < 0 || index > FPGADef.InputCount)
+      {
         return double.NaN;
       }
       return this._inputValues[index];

@@ -25,362 +25,117 @@ namespace fpgamod
 
     public abstract double Op(IFPGAInput input);
 
-    public static void Compile(LogicStack stack, MemoryMapping mapping, FPGAGate[] gates)
+    public static void Compile(FPGADef def, FPGAGate[] gates)
     {
-      if (stack.Size != mapping.GateCount + mapping.LookupCount)
+      var parsed = new (FPGAOp, byte, byte)[FPGADef.GateCount];
+      for (var i = 0; i < FPGADef.GateCount; i++)
       {
-        throw new Exception("stack size mismatch");
-      }
-      var parsed = new (byte, byte, byte)[mapping.GateCount];
-      for (var i = 0; i < mapping.GateCount; i++)
-      {
-        parsed[i] = LogicStack.UnpackByteX2(ProgrammableChip.DoubleToLong(stack[i], false));
+        parsed[i] = def.GetGateParts((byte)(i + FPGADef.GateOffset));
         gates[i] = null;
       }
-      var building = new bool[mapping.GateCount];
-      var circular = new bool[mapping.GateCount];
+      var building = new bool[FPGADef.GateCount];
+      var circular = new bool[FPGADef.GateCount];
 
-      var inputGates = new FPGAGate[mapping.InputCount];
-      for (var i = 0; i < mapping.InputCount; i++)
+      var inputGates = new FPGAGate[FPGADef.InputCount];
+      for (var i = 0; i < FPGADef.InputCount; i++)
       {
         inputGates[i] = new InputGate(i);
       }
-      var lutGates = new FPGAGate[mapping.LookupCount];
-      for (var i = 0; i < mapping.LookupCount; i++)
+      var lutGates = new FPGAGate[FPGADef.LutCount];
+      for (var i = 0; i < FPGADef.LutCount; i++)
       {
-        lutGates[i] = new ConstantGate(stack[i + mapping.GateCount]);
+        lutGates[i] = new ConstantGate(def.GetLutValue((byte)(i + FPGADef.LutOffset)));
       }
       var errGate = new ConstantGate(double.NaN);
-      Func<Address, FPGAGate> getGate = address =>
+      Func<byte, FPGAGate> getGate = address =>
       {
-        switch (address.Section)
+        if (FPGADef.IsIOAddress(address))
         {
-          case AddressSection.IO:
-            return inputGates[address.Offset];
-          case AddressSection.Gate:
-            return gates[address.Offset];
-          case AddressSection.LUT:
-            return lutGates[address.Offset];
-          default:
-            return errGate;
+          return inputGates[address - FPGADef.InputOffset];
         }
+        if (FPGADef.IsGateAddress(address))
+        {
+          return gates[address - FPGADef.GateOffset];
+        }
+        if (FPGADef.IsLutAddress(address))
+        {
+          return lutGates[address - FPGADef.LutOffset];
+        }
+        return errGate;
       };
-      Action<Address> markCircular = address =>
+      Action<byte> markCircular = address =>
       {
-        if (address.Section != AddressSection.Gate)
+        if (!FPGADef.IsGateAddress(address))
         {
           throw new Exception("invalid circular mark");
         }
-        circular[address.Offset] = true;
-        gates[address.Offset] = errGate;
+        circular[address - FPGADef.GateOffset] = true;
+        gates[address - FPGADef.GateOffset] = errGate;
       };
-      Func<Address, bool> buildGate = null;
+      Func<byte, bool> buildGate = null;
       buildGate = address =>
       {
-        if (address.Section != AddressSection.Gate)
+        if (!FPGADef.IsGateAddress(address))
         {
           return false;
         }
-        if (gates[address.Offset] != null)
+        var index = address - FPGADef.GateOffset;
+        if (gates[index] != null)
         {
-          return circular[address.Offset];
+          return circular[index];
         }
-        if (building[address.Offset])
+        if (building[index])
         {
           markCircular(address);
           return true;
         }
-        building[address.Offset] = true;
-        var (op, g0, g1) = parsed[address.Offset];
-        var inst = (Instruction)op;
-        var a0 = mapping.LookupRead(g0);
-        var a1 = mapping.LookupRead(g1);
+        building[index] = true;
+        var (op, g0, g1) = parsed[index];
+        var info = FPGAOps.GetOpInfo(op);
         FPGAGate gate0 = null, gate1 = null;
-        if (InstructionIsValid(inst))
+        if (info.Operands >= 1)
         { // has g0
-          if (buildGate(a0))
+          if (buildGate(g0))
           {
             markCircular(address);
             return true;
           }
-          gate0 = getGate(a0);
+          gate0 = getGate(g0);
         }
-        if (InstructionIsBinary(inst))
+        if (info.Operands >= 2)
         { // has g1
-          if (buildGate(a1))
+          if (buildGate(g1))
           {
             markCircular(address);
             return true;
           }
-          gate1 = getGate(a1);
+          gate1 = getGate(g1);
         }
-        gates[address.Offset] = MakeGate(inst, gate0, gate1, errGate);
-        building[address.Offset] = false;
+        gates[index] = MakeGate(op, gate0, gate1);
+        building[index] = false;
         return false;
       }
         ;
-      for (var i = 0; i < mapping.GateCount; i++)
+      for (var i = 0; i < FPGADef.GateCount; i++)
       {
-        buildGate(new Address(AddressSection.Gate, i));
+        buildGate((byte)(i + FPGADef.GateOffset));
       }
     }
 
-    public struct MemoryMapping
+    private static FPGAGate MakeGate(FPGAOp op, FPGAGate g0, FPGAGate g1)
     {
-      public readonly int InputCount;
-      public readonly int GateCount;
-      public readonly int LookupCount;
-
-      public MemoryMapping(int InputCount, int GateCount, int LookupCount)
+      var info = FPGAOps.GetOpInfo(op);
+      switch (info.Operands)
       {
-        this.InputCount = InputCount;
-        this.GateCount = GateCount;
-        this.LookupCount = LookupCount;
+        case 0:
+          return new ConstantGate(info.ConstantOp());
+        case 1:
+          return new UnaryGate(info.UnaryOp, g0);
+        case 2:
+          return new BinaryGate(info.BinaryOp, g0, g1);
       }
-
-      public int GateOffset => Math.Max(this.InputCount, this.GateCount);
-      public int LookupOffset => this.GateOffset + this.GateCount;
-      public int TotalSize => this.LookupOffset + this.LookupCount;
-
-      public Address LookupRead(int address)
-      {
-        return this.Lookup(address, true);
-      }
-
-      public Address LookupWrite(int address)
-      {
-        return this.Lookup(address, false);
-      }
-
-      private Address Lookup(int address, bool read)
-      {
-        if (address < 0)
-        {
-          return new Address(AddressSection.Invalid, 0);
-        }
-        if (address < this.GateOffset)
-        {
-          if (!read && address >= this.InputCount)
-          { // write input values
-            return new Address(AddressSection.Invalid, 0);
-          }
-          if (read && address >= this.GateCount)
-          { // read gate outputs
-            return new Address(AddressSection.Invalid, 0);
-          }
-          return new Address(AddressSection.IO, address);
-        }
-        if (address < this.GateOffset + this.GateCount)
-        {
-          return new Address(AddressSection.Gate, address - this.GateOffset);
-        }
-        if (address < this.LookupOffset + this.LookupCount)
-        {
-          return new Address(AddressSection.LUT, address - this.LookupOffset);
-        }
-        return new Address(AddressSection.Invalid, 0);
-      }
+      throw new Exception("invalid operand count");
     }
-
-    public enum AddressSection
-    {
-      Invalid,
-      IO,
-      Gate,
-      LUT
-    }
-    public struct Address
-    {
-      public readonly AddressSection Section;
-      public readonly int Offset;
-
-      public Address(AddressSection Section, int Offset) { this.Section = Section; this.Offset = Offset; }
-    }
-
-    private static FPGAGate MakeGate(Instruction inst, FPGAGate g0, FPGAGate g1, FPGAGate err)
-    {
-      if (!InstructionIsValid(inst))
-      {
-        return err;
-      }
-      if (InstructionIsBinary(inst))
-      {
-        return new BinaryGate(binaryOps[inst], g0, g1);
-      }
-      else
-      {
-        return new UnaryGate(unaryOps[inst], g0);
-      }
-    }
-
-    private static bool InstructionIsValid(Instruction inst)
-    {
-      return inst >= Instruction.Ceil && inst <= Instruction.BitSrl;
-    }
-
-    private static bool InstructionIsBinary(Instruction inst)
-    {
-      return inst >= Instruction.Add && inst <= Instruction.BitSrl;
-    }
-
-    public static readonly EnumCollection<Instruction, byte> Instructions = new EnumCollection<Instruction, byte>(false);
-    // gate instruction value (by byte low-high): [op] [g0] [g1] [unused]x5
-    // g0/g1 = [0-63] input pin, [64-127] gate output value, [128-191] lookup table
-    public enum Instruction : byte
-    {
-      None,
-
-      // unary ops perform op on g0
-      Ceil,
-      Floor,
-      Abs,
-      Log,
-      Exp,
-      Round,
-      Sqrt,
-      Sin,
-      Cos,
-      Tan,
-      Asin,
-      Acos,
-      Atan,
-      LogicNot,
-      BitNot,
-
-      // binary ops perform g0[op]g1
-      // binary math ops
-      Add,
-      Subtract,
-      Multiply,
-      Divide,
-      Mod,
-      Atan2, // y=g0, x=g1
-      Pow,
-      // binary compare ops
-      Less,
-      LessEquals,
-      Equals,
-      GreaterEquals,
-      Greater,
-      NotEquals,
-      Min,
-      Max,
-      // binary boolean ops
-      LogicAnd,
-      LogicOr,
-      // binary bit ops
-      BitAnd,
-      BitOr,
-      BitXor,
-      BitNand,
-      BitNor,
-      BitSla,
-      BitSll,
-      BitSra,
-      BitSrl,
-    }
-
-    public static Dictionary<Instruction, string> InstructionSymbols = new()
-    {
-      [Instruction.None] = "none",
-      [Instruction.Ceil] = "ceil",
-      [Instruction.Floor] = "floor",
-      [Instruction.Abs] = "abs",
-      [Instruction.Log] = "log",
-      [Instruction.Exp] = "exp",
-      [Instruction.Round] = "round",
-      [Instruction.Sqrt] = "sqrt",
-      [Instruction.Sin] = "sin",
-      [Instruction.Cos] = "cos",
-      [Instruction.Tan] = "tan",
-      [Instruction.Asin] = "asin",
-      [Instruction.Acos] = "acos",
-      [Instruction.Atan] = "atan",
-      [Instruction.LogicNot] = "!",
-      [Instruction.BitNot] = "~",
-      [Instruction.Add] = "+",
-      [Instruction.Subtract] = "-",
-      [Instruction.Multiply] = "*",
-      [Instruction.Divide] = "/",
-      [Instruction.Mod] = "%",
-      [Instruction.Atan2] = "atan2",
-      [Instruction.Pow] = "pow",
-      [Instruction.Less] = "<",
-      [Instruction.LessEquals] = "<=",
-      [Instruction.Equals] = "==",
-      [Instruction.GreaterEquals] = ">=",
-      [Instruction.Greater] = ">",
-      [Instruction.NotEquals] = "!=",
-      [Instruction.Min] = "min",
-      [Instruction.Max] = "max",
-      [Instruction.LogicAnd] = "&&",
-      [Instruction.LogicOr] = "||",
-      [Instruction.BitAnd] = "&",
-      [Instruction.BitOr] = "|",
-      [Instruction.BitXor] = "^",
-      [Instruction.BitNand] = "nand",
-      [Instruction.BitNor] = "nor",
-      [Instruction.BitSla] = "sla",
-      [Instruction.BitSll] = "sll",
-      [Instruction.BitSra] = "sra",
-      [Instruction.BitSrl] = "srl",
-    };
-
-    private static Dictionary<Instruction, Func<double, double>> unaryOps = new()
-    {
-      [Instruction.Ceil] = Math.Ceiling,
-      [Instruction.Floor] = Math.Floor,
-      [Instruction.Abs] = Math.Abs,
-      [Instruction.Log] = Math.Log,
-      [Instruction.Exp] = Math.Exp,
-      [Instruction.Round] = Math.Round,
-      [Instruction.Sqrt] = Math.Sqrt,
-      [Instruction.Sin] = Math.Sin,
-      [Instruction.Cos] = Math.Cos,
-      [Instruction.Tan] = Math.Tan,
-      [Instruction.Asin] = Math.Asin,
-      [Instruction.Acos] = Math.Acos,
-      [Instruction.Atan] = Math.Atan,
-      [Instruction.LogicNot] = val => val == 0 ? 1 : 0,
-      [Instruction.BitNot] = val => ProgrammableChip.LongToDouble(~ProgrammableChip.DoubleToLong(val, true)),
-    };
-
-    private static Func<double, double, double> makeBinaryBitOp(Func<long, long, long> op, bool firstSigned = true)
-    {
-      return (val1, val2) => ProgrammableChip.LongToDouble(op(ProgrammableChip.DoubleToLong(val1, firstSigned), ProgrammableChip.DoubleToLong(val2, true)));
-    }
-
-    private static Dictionary<Instruction, Func<double, double, double>> binaryOps = new()
-    {
-      [Instruction.Add] = (val1, val2) => val1 + val2,
-      [Instruction.Subtract] = (val1, val2) => val1 - val2,
-      [Instruction.Multiply] = (val1, val2) => val1 * val2,
-      [Instruction.Divide] = (val1, val2) => val1 / val2,
-      [Instruction.Mod] = (val1, val2) => { var res = val1 % val2; return res < 0 ? res + val2 : res; },
-      [Instruction.Atan2] = Math.Atan2, // y=g0, x=g1
-      [Instruction.Pow] = Math.Pow,
-      [Instruction.Less] = (val1, val2) => val1 < val2 ? 1 : 0,
-      [Instruction.LessEquals] = (val1, val2) => val1 <= val2 ? 1 : 0,
-      [Instruction.Equals] = (val1, val2) => val1 == val2 ? 1 : 0,
-      [Instruction.GreaterEquals] = (val1, val2) => val1 >= val2 ? 1 : 0,
-      [Instruction.Greater] = (val1, val2) => val1 > val2 ? 1 : 0,
-      [Instruction.NotEquals] = (val1, val2) => val1 != val2 ? 1 : 0,
-      [Instruction.Min] = (val1, val2) => val1 < val2 ? val1 : val2,
-      [Instruction.Max] = (val1, val2) => val1 > val2 ? val1 : val2,
-      [Instruction.LogicAnd] = (val1, val2) => val1 != 0 && val2 != 0 ? 1 : 0,
-      [Instruction.LogicOr] = (val1, val2) => val1 != 0 || val2 != 0 ? 1 : 0,
-      [Instruction.BitAnd] = makeBinaryBitOp((val1, val2) => val1 & val2),
-      [Instruction.BitOr] = makeBinaryBitOp((val1, val2) => val1 | val2),
-      [Instruction.BitXor] = makeBinaryBitOp((val1, val2) => val1 ^ val2),
-      [Instruction.BitNand] = makeBinaryBitOp((val1, val2) => ~(val1 & val2)),
-      [Instruction.BitNor] = makeBinaryBitOp((val1, val2) => ~(val1 | val2)),
-      [Instruction.BitSla] = makeBinaryBitOp((val1, val2) => val1 << (int)val2),
-      [Instruction.BitSll] = makeBinaryBitOp((val1, val2) => val1 << (int)val2),
-      [Instruction.BitSra] = makeBinaryBitOp((val1, val2) => val1 >> (int)val2),
-      [Instruction.BitSrl] = makeBinaryBitOp((val1, val2) => val1 >> (int)val2, firstSigned: false),
-    };
-
-
 
     private class ConstantGate : FPGAGate
     {

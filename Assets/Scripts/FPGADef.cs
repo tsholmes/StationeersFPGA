@@ -65,6 +65,9 @@ namespace fpgamod
 
     public static FPGADef Parse(string raw)
     {
+      if (string.IsNullOrWhiteSpace(raw)) {
+        return NewEmpty();
+      }
       var lines = raw.Split('\n');
       var cfgLines = new List<ConfigLine>();
       foreach (var line in lines)
@@ -379,7 +382,7 @@ namespace fpgamod
 
       var cfg = this._configLines[idx];
       cfg.RawGate = true;
-      cfg.RawGateOp = $"{value:X6}";
+      cfg.RawGateOp = $"${value:X6}";
       cfg.GateOp = (FPGAOp)(value & 0xFF);
       cfg.RawGateInput1 = "";
       cfg.RawGateInput2 = "";
