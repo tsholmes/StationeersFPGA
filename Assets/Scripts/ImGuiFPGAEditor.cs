@@ -37,6 +37,7 @@ namespace fpgamod
     // editor state
     private static FPGAMotherboard Motherboard = null;
     private static FPGADef Def = null;
+    private static string _rawDef = "";
     private static ulong _inputOpen = 0;
     private static ulong _gateOpen = 0;
     private static ulong _lutOpen = 0;
@@ -56,7 +57,7 @@ namespace fpgamod
     public static void ShowEditor(FPGAMotherboard motherboard)
     {
       Motherboard = motherboard;
-      Def = new FPGADef(); // TODO: actually save/load this
+      Def = FPGADef.NewEmpty(); // TODO: actually save/load this
       _show = true;
       InputMouse.SetMouseControl(true);
       UIBlocker.SetActive(true);
@@ -161,13 +162,18 @@ namespace fpgamod
           {
             if (ImGui.BeginTabItem("Editor"))
             {
-              if (ImGui.BeginChild("EditorChild"))
-              {
-                DrawEditorInputs();
-                DrawEditorGates();
-                DrawEditorLUTs();
-                ImGui.EndChild();
-              }
+              ImGui.BeginChild("EditorChild");
+              DrawEditorInputs();
+              DrawEditorGates();
+              DrawEditorLUTs();
+              ImGui.EndChild();
+              ImGui.EndTabItem();
+            }
+            if (ImGui.BeginTabItem("Raw"))
+            {
+              ImGui.BeginChild("RawChild");
+              DrawRawEditor();
+              ImGui.EndChild();
               ImGui.EndTabItem();
             }
             ImGui.EndTabBar();
@@ -183,20 +189,20 @@ namespace fpgamod
 
     private static void DrawInputGrid(float size)
     {
-      DrawGrid(size, "Inputs", "inputTable", FPGADef.InputNames, Def.InputLabels, ref _inputOpen, 0);
+      DrawGrid(size, "Inputs", "inputTable", 0, ref _inputOpen);
     }
 
     private static void DrawGateGrid(float size)
     {
-      DrawGrid(size, "Gates", "gateTable", FPGADef.GateNames, Def.GateLabels, ref _gateOpen, 64);
+      DrawGrid(size, "Gates", "gateTable", 64, ref _gateOpen);
     }
 
     private static void DrawLutGrid(float size)
     {
-      DrawGrid(size, "Lookup Table", "lutTable", FPGADef.LutNames, Def.LutLabels, ref _lutOpen, 128);
+      DrawGrid(size, "Lookup Table", "lutTable", 128, ref _lutOpen);
     }
 
-    private static void DrawGrid(float size, string title, string id, string[] defLabels, string[] labels, ref ulong open, byte inputOffset)
+    private static void DrawGrid(float size, string title, string id, byte addressOffset, ref ulong open)
     {
       var vecSize = Vector2.one * size;
       ImGui.Text(title);
@@ -216,9 +222,10 @@ namespace fpgamod
             ImGui.TableNextRow(0, size);
           }
           ImGui.TableSetColumnIndex(col);
-          var srcLabel = labels[i];
-          var label = srcLabel.IsNullOrWhiteSpace() ? _indexText[i] : srcLabel;
-          var tooltip = srcLabel.IsNullOrWhiteSpace() ? defLabels[i] : srcLabel;
+          var address = (byte)(i + addressOffset);
+          var srcLabel = Def.GetLabel(address, nameFallback: false);
+          var label = srcLabel == "" ? _indexText[i] : srcLabel;
+          var tooltip = Def.GetLabel(address);
           var isOpen = (open & (1ul << i)) != 0;
           if (isOpen)
           {
@@ -243,7 +250,7 @@ namespace fpgamod
           }
           if (ImGui.BeginDragDropSource())
           {
-            ImGui.SetDragDropPayload<byte>("gate_input", (byte)(i + inputOffset));
+            ImGui.SetDragDropPayload<byte>("gate_input", address);
             ImGui.Text(label);
             ImGui.EndDragDropSource();
           }
@@ -279,6 +286,7 @@ namespace fpgamod
 
     private static void DrawEditorInput(int index)
     {
+      var address = (byte)index;
       ImGui.PushID(index);
       {
         ImGui.TableNextColumn();
@@ -286,9 +294,13 @@ namespace fpgamod
         ImGui.Text(_indexText[index]);
       }
       {
+        var label = Def.GetLabel(address, nameFallback: false);
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
-        ImGui.InputTextWithHint("##label", FPGADef.InputNames[index], ref Def.InputLabels[index], 32u, ImGuiInputTextFlags.CharsNoBlank); ;
+        if (ImGui.InputTextWithHint("##label", FPGADef.InputNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
+        {
+          Def.SetLabel(address, label);
+        }
       }
       ImGui.PopID();
     }
@@ -322,7 +334,8 @@ namespace fpgamod
 
     private static void DrawEditorGate(int index)
     {
-      var currentOp = Def.GateOps[index];
+      var address = (byte)(index + 64);
+      var currentOp = Def.GetGateOp(address);
       var currentInfo = FPGAOps.GetOpInfo(currentOp);
 
       ImGui.PushID(index);
@@ -332,8 +345,13 @@ namespace fpgamod
         ImGui.Text(_indexText[index]);
       }
       {
+        var label = Def.GetLabel(address, nameFallback: false);
         ImGui.TableNextColumn();
-        ImGui.InputTextWithHint("##label", FPGADef.GateNames[index], ref Def.GateLabels[index], 32u, ImGuiInputTextFlags.CharsNoBlank);
+        ImGui.SetNextItemWidth(-float.Epsilon);
+        if (ImGui.InputTextWithHint("##label", FPGADef.GateNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
+        {
+          Def.SetLabel(address, label);
+        }
       }
       {
         ImGui.TableNextColumn();
@@ -357,7 +375,7 @@ namespace fpgamod
               if (ImGui.Selectable(info.Symbol, op == currentOp) || pickFirst)
               {
                 pickFirst = false;
-                Def.GateOps[index] = op;
+                Def.SetGateOp(address, op);
                 ImGui.CloseCurrentPopup();
               }
               ItemTooltip(info.Hint);
@@ -386,7 +404,7 @@ namespace fpgamod
         ImGui.PushID("input1");
         if (currentInfo.Operands > 0)
         {
-          DrawEditorGateInput(index, Def.GateInput1s);
+          DrawEditorGateInput(address, false);
         }
         else
         {
@@ -399,7 +417,7 @@ namespace fpgamod
         ImGui.PushID("input2");
         if (currentInfo.Operands > 1)
         {
-          DrawEditorGateInput(index, Def.GateInput2s);
+          DrawEditorGateInput(address, true);
         }
         else
         {
@@ -410,10 +428,11 @@ namespace fpgamod
       ImGui.PopID();
     }
 
-    private static void DrawEditorGateInput(int index, byte[] inputs)
+    private static void DrawEditorGateInput(byte address, bool isInput2)
     {
       ImGui.SetNextItemWidth(-float.Epsilon);
-      if (ImGui.BeginCombo("##gateinputcombo", Def.GetGateInputLabel(inputs[index])))
+      var curInput = isInput2 ? Def.GetGateInput2(address) : Def.GetGateInput1(address);
+      if (ImGui.BeginCombo("##gateinputcombo", Def.GetLabel(curInput)))
       {
         ImGui.SetNextItemWidth(-float.Epsilon);
         var pickFirst = ImGui.InputTextWithHint("##inputsearch", "search", ref _gateEditSearch, 32u, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue);
@@ -423,18 +442,25 @@ namespace fpgamod
         }
         var searchLower = _gateEditSearch.ToLower();
         var hasFound = false;
-        for (byte input = 0; input < 192; input++)
+        for (byte inputAddress = 0; inputAddress < 192; inputAddress++)
         {
-          var label = Def.GetGateInputLabel(input);
-          var name = FPGADef.GetGateInputName(input);
+          var label = Def.GetLabel(inputAddress);
+          var name = FPGADef.GetName(inputAddress);
 
           if (label.ToLower().Contains(searchLower) || name.Contains(searchLower))
           {
             hasFound = true;
-            if (ImGui.Selectable(label, input == inputs[index]) || pickFirst)
+            if (ImGui.Selectable(label, inputAddress == curInput) || pickFirst)
             {
               pickFirst = false;
-              inputs[index] = input;
+              if (isInput2)
+              {
+                Def.SetGateInput2(address, inputAddress);
+              }
+              else
+              {
+                Def.SetGateInput1(address, inputAddress);
+              }
               ImGui.CloseCurrentPopup();
             }
             if (label != name)
@@ -461,9 +487,16 @@ namespace fpgamod
       }
       if (ImGui.BeginDragDropTarget())
       {
-        if (ImGui.AcceptDragDropPayload<byte>("gate_input", out byte input))
+        if (ImGui.AcceptDragDropPayload<byte>("gate_input", out byte inputAddress))
         {
-          inputs[index] = input;
+          if (isInput2)
+          {
+            Def.SetGateInput2(address, inputAddress);
+          }
+          else
+          {
+            Def.SetGateInput1(address, inputAddress);
+          }
         }
         ImGui.EndDragDropTarget();
       }
@@ -496,6 +529,7 @@ namespace fpgamod
 
     private static void DrawEditorLUT(int index)
     {
+      var address = (byte)(index + 128);
       ImGui.PushID(index);
       {
         ImGui.TableNextColumn();
@@ -503,16 +537,37 @@ namespace fpgamod
         ImGui.Text(_indexText[index]);
       }
       {
+        var label = Def.GetLabel(address, nameFallback: false);
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
-        ImGui.InputTextWithHint("##label", FPGADef.LutNames[index], ref Def.LutLabels[index], 32u, ImGuiInputTextFlags.CharsNoBlank);
+        if (ImGui.InputTextWithHint("##label", FPGADef.LutNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
+        {
+          Def.SetLabel(address, label);
+        }
       }
       {
+        var value = Def.GetLutValue(address);
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
-        ImGui.InputDouble("##value", ref Def.LutValues[index], "%f");
+        if (ImGui.InputDouble("##value", ref value, "%f"))
+        {
+          Def.SetLutValue(address, value);
+        }
       }
       ImGui.PopID();
+    }
+
+    private static void DrawRawEditor()
+    {
+      if (ImGui.IsWindowAppearing())
+      {
+        _rawDef = Def.GetRaw();
+      }
+
+      if (ImGui.InputTextMultiline("##raw", ref _rawDef, 65536, Vector2.one * -float.Epsilon))
+      {
+        Def = FPGADef.Parse(_rawDef);
+      }
     }
 
     private static void ItemTooltip(string text)

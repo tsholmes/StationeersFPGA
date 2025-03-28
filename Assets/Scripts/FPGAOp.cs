@@ -6,7 +6,7 @@ namespace fpgamod
 {
   // gate instruction value (by byte low-high): [op] [g0] [g1] [unused]x5
   // g0/g1 = [0-63] input pin, [64-127] gate output value, [128-191] lookup table
-  public enum FPGAOp
+  public enum FPGAOp : byte
   {
     None,
 
@@ -120,5 +120,15 @@ namespace fpgamod
       [FPGAOp.BitSra] = new FPGAOpInfo { Symbol = "sra", Hint = "shift right arithmetic", Operands = 2 },
       [FPGAOp.BitSrl] = new FPGAOpInfo { Symbol = "srl", Hint = "shift right logical", Operands = 2 },
     };
+
+    public static Dictionary<string, FPGAOp> SymbolToOp;
+    static FPGAOps()
+    {
+      SymbolToOp = new();
+      for (FPGAOp op = FPGAOp.None; op < Count; op++)
+      {
+        SymbolToOp[InfoDict[op].Symbol] = op;
+      }
+    }
   }
 }
