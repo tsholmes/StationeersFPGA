@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.Objects.Electrical;
 using UnityEngine;
 
 namespace fpgamod
@@ -13,6 +15,7 @@ namespace fpgamod
     // unary ops perform op on g0
     Ceil,
     Floor,
+    Trunc,
     Abs,
     Log,
     Exp,
@@ -65,6 +68,9 @@ namespace fpgamod
     public string Symbol;
     public string Hint;
     public int Operands;
+    public Func<double> ConstantOp;
+    public Func<double, double> UnaryOp;
+    public Func<double, double, double> BinaryOp;
   }
 
   public static class FPGAOps
@@ -74,51 +80,52 @@ namespace fpgamod
     {
       return InfoDict.GetValueOrDefault(op, InvalidOp);
     }
-    public static FPGAOpInfo InvalidOp = new FPGAOpInfo { Symbol = "invalid", Hint = "" };
+    public static FPGAOpInfo InvalidOp = new FPGAOpInfo { Symbol = "invalid", Hint = "", ConstantOp = () => double.NaN };
     public static readonly Dictionary<FPGAOp, FPGAOpInfo> InfoDict = new()
     {
-      [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "" },
-      [FPGAOp.Ceil] = new FPGAOpInfo { Symbol = "ceil", Hint = "round up", Operands = 1 },
-      [FPGAOp.Floor] = new FPGAOpInfo { Symbol = "floor", Hint = "round down", Operands = 1 },
-      [FPGAOp.Abs] = new FPGAOpInfo { Symbol = "abs", Hint = "absolute value", Operands = 1 },
-      [FPGAOp.Log] = new FPGAOpInfo { Symbol = "log", Hint = "natural logarithm base e", Operands = 1 },
-      [FPGAOp.Exp] = new FPGAOpInfo { Symbol = "exp", Hint = "exponential function e^x", Operands = 1 },
-      [FPGAOp.Round] = new FPGAOpInfo { Symbol = "round", Hint = "round to nearest", Operands = 1 },
-      [FPGAOp.Sqrt] = new FPGAOpInfo { Symbol = "sqrt", Hint = "square root", Operands = 1 },
-      [FPGAOp.Sin] = new FPGAOpInfo { Symbol = "sin", Hint = "trig sine", Operands = 1 },
-      [FPGAOp.Cos] = new FPGAOpInfo { Symbol = "cos", Hint = "trig cosine", Operands = 1 },
-      [FPGAOp.Tan] = new FPGAOpInfo { Symbol = "tan", Hint = "trig tangent", Operands = 1 },
-      [FPGAOp.Asin] = new FPGAOpInfo { Symbol = "asin", Hint = "trig arcsine", Operands = 1 },
-      [FPGAOp.Acos] = new FPGAOpInfo { Symbol = "acos", Hint = "trig arccosine", Operands = 1 },
-      [FPGAOp.Atan] = new FPGAOpInfo { Symbol = "atan", Hint = "trig arctangent", Operands = 1 },
-      [FPGAOp.LogicNot] = new FPGAOpInfo { Symbol = "!", Hint = "logical not (1 if zero, 0 otherwise)", Operands = 1 },
-      [FPGAOp.BitNot] = new FPGAOpInfo { Symbol = "~", Hint = "bitwise not", Operands = 1 },
-      [FPGAOp.Add] = new FPGAOpInfo { Symbol = "+", Hint = "add/plus", Operands = 2 },
-      [FPGAOp.Subtract] = new FPGAOpInfo { Symbol = "-", Hint = "subtract/minus", Operands = 2 },
-      [FPGAOp.Multiply] = new FPGAOpInfo { Symbol = "*", Hint = "multiply/times", Operands = 2 },
-      [FPGAOp.Divide] = new FPGAOpInfo { Symbol = "/", Hint = "divide", Operands = 2 },
-      [FPGAOp.Mod] = new FPGAOpInfo { Symbol = "%", Hint = "modulus", Operands = 2 },
-      [FPGAOp.Atan2] = new FPGAOpInfo { Symbol = "atan2", Hint = "trig arctangent(y,x) from coordinates", Operands = 2 },
-      [FPGAOp.Pow] = new FPGAOpInfo { Symbol = "pow", Hint = "exponent a^b", Operands = 2 },
-      [FPGAOp.Less] = new FPGAOpInfo { Symbol = "<", Hint = "less", Operands = 2 },
-      [FPGAOp.LessEquals] = new FPGAOpInfo { Symbol = "<=", Hint = "less or equal", Operands = 2 },
-      [FPGAOp.Equals] = new FPGAOpInfo { Symbol = "==", Hint = "equal", Operands = 2 },
-      [FPGAOp.GreaterEquals] = new FPGAOpInfo { Symbol = ">=", Hint = "greater or equal", Operands = 2 },
-      [FPGAOp.Greater] = new FPGAOpInfo { Symbol = ">", Hint = "greater", Operands = 2 },
-      [FPGAOp.NotEquals] = new FPGAOpInfo { Symbol = "!=", Hint = "not equal", Operands = 2 },
-      [FPGAOp.Min] = new FPGAOpInfo { Symbol = "min", Hint = "minimum", Operands = 2 },
-      [FPGAOp.Max] = new FPGAOpInfo { Symbol = "max", Hint = "maximum", Operands = 2 },
-      [FPGAOp.LogicAnd] = new FPGAOpInfo { Symbol = "&&", Hint = "logical and (both nonzero)", Operands = 2 },
-      [FPGAOp.LogicOr] = new FPGAOpInfo { Symbol = "||", Hint = "logical or (either nonzero)", Operands = 2 },
-      [FPGAOp.BitAnd] = new FPGAOpInfo { Symbol = "&", Hint = "bitwise and", Operands = 2 },
-      [FPGAOp.BitOr] = new FPGAOpInfo { Symbol = "|", Hint = "bitwise or", Operands = 2 },
-      [FPGAOp.BitXor] = new FPGAOpInfo { Symbol = "^", Hint = "bitwise xor", Operands = 2 },
-      [FPGAOp.BitNand] = new FPGAOpInfo { Symbol = "nand", Hint = "bitwise nand", Operands = 2 },
-      [FPGAOp.BitNor] = new FPGAOpInfo { Symbol = "nor", Hint = "bitwise nor", Operands = 2 },
-      [FPGAOp.BitSla] = new FPGAOpInfo { Symbol = "sla", Hint = "shift left arithmetic", Operands = 2 },
-      [FPGAOp.BitSll] = new FPGAOpInfo { Symbol = "sll", Hint = "shift left logical", Operands = 2 },
-      [FPGAOp.BitSra] = new FPGAOpInfo { Symbol = "sra", Hint = "shift right arithmetic", Operands = 2 },
-      [FPGAOp.BitSrl] = new FPGAOpInfo { Symbol = "srl", Hint = "shift right logical", Operands = 2 },
+      [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "", ConstantOp = () => double.NaN },
+      [FPGAOp.Ceil] = new FPGAOpInfo { Symbol = "ceil", Hint = "round up", Operands = 1, UnaryOp = Math.Ceiling },
+      [FPGAOp.Floor] = new FPGAOpInfo { Symbol = "floor", Hint = "round down", Operands = 1, UnaryOp = Math.Floor },
+      [FPGAOp.Trunc] = new FPGAOpInfo { Symbol = "trunc", Hint = "truncate/ipart", Operands = 1, UnaryOp = Math.Truncate },
+      [FPGAOp.Abs] = new FPGAOpInfo { Symbol = "abs", Hint = "absolute value", Operands = 1, UnaryOp = Math.Abs },
+      [FPGAOp.Log] = new FPGAOpInfo { Symbol = "log", Hint = "natural logarithm base e", Operands = 1, UnaryOp = Math.Log },
+      [FPGAOp.Exp] = new FPGAOpInfo { Symbol = "exp", Hint = "exponential function e^x", Operands = 1, UnaryOp = Math.Exp },
+      [FPGAOp.Round] = new FPGAOpInfo { Symbol = "round", Hint = "round to nearest", Operands = 1, UnaryOp = Math.Round },
+      [FPGAOp.Sqrt] = new FPGAOpInfo { Symbol = "sqrt", Hint = "square root", Operands = 1, UnaryOp = Math.Sqrt },
+      [FPGAOp.Sin] = new FPGAOpInfo { Symbol = "sin", Hint = "trig sine", Operands = 1, UnaryOp = Math.Sin },
+      [FPGAOp.Cos] = new FPGAOpInfo { Symbol = "cos", Hint = "trig cosine", Operands = 1, UnaryOp = Math.Cos },
+      [FPGAOp.Tan] = new FPGAOpInfo { Symbol = "tan", Hint = "trig tangent", Operands = 1, UnaryOp = Math.Tan },
+      [FPGAOp.Asin] = new FPGAOpInfo { Symbol = "asin", Hint = "trig arcsine", Operands = 1, UnaryOp = Math.Asin },
+      [FPGAOp.Acos] = new FPGAOpInfo { Symbol = "acos", Hint = "trig arccosine", Operands = 1, UnaryOp = Math.Acos },
+      [FPGAOp.Atan] = new FPGAOpInfo { Symbol = "atan", Hint = "trig arctangent", Operands = 1, UnaryOp = Math.Atan },
+      [FPGAOp.LogicNot] = new FPGAOpInfo { Symbol = "!", Hint = "logical not (1 if zero, 0 otherwise)", Operands = 1, UnaryOp = OpLogicNot },
+      [FPGAOp.BitNot] = new FPGAOpInfo { Symbol = "~", Hint = "bitwise not", Operands = 1, UnaryOp = OpBitNot },
+      [FPGAOp.Add] = new FPGAOpInfo { Symbol = "+", Hint = "add/plus", Operands = 2, BinaryOp = OpAdd },
+      [FPGAOp.Subtract] = new FPGAOpInfo { Symbol = "-", Hint = "subtract/minus", Operands = 2, BinaryOp = OpSubtract },
+      [FPGAOp.Multiply] = new FPGAOpInfo { Symbol = "*", Hint = "multiply/times", Operands = 2, BinaryOp = OpMultiply },
+      [FPGAOp.Divide] = new FPGAOpInfo { Symbol = "/", Hint = "divide", Operands = 2, BinaryOp = OpDivide },
+      [FPGAOp.Mod] = new FPGAOpInfo { Symbol = "%", Hint = "modulus", Operands = 2, BinaryOp = OpMod },
+      [FPGAOp.Atan2] = new FPGAOpInfo { Symbol = "atan2", Hint = "trig arctangent(y,x) from coordinates", Operands = 2, BinaryOp = Math.Atan2 },
+      [FPGAOp.Pow] = new FPGAOpInfo { Symbol = "pow", Hint = "exponent a^b", Operands = 2, BinaryOp = Math.Pow },
+      [FPGAOp.Less] = new FPGAOpInfo { Symbol = "<", Hint = "less", Operands = 2, BinaryOp = OpLess },
+      [FPGAOp.LessEquals] = new FPGAOpInfo { Symbol = "<=", Hint = "less or equal", Operands = 2, BinaryOp = OpLessEquals },
+      [FPGAOp.Equals] = new FPGAOpInfo { Symbol = "==", Hint = "equal", Operands = 2, BinaryOp = OpEquals },
+      [FPGAOp.GreaterEquals] = new FPGAOpInfo { Symbol = ">=", Hint = "greater or equal", Operands = 2, BinaryOp = OpGreaterEquals },
+      [FPGAOp.Greater] = new FPGAOpInfo { Symbol = ">", Hint = "greater", Operands = 2, BinaryOp = OpGreater },
+      [FPGAOp.NotEquals] = new FPGAOpInfo { Symbol = "!=", Hint = "not equal", Operands = 2, BinaryOp = OpNotEquals },
+      [FPGAOp.Min] = new FPGAOpInfo { Symbol = "min", Hint = "minimum", Operands = 2, BinaryOp = OpMin },
+      [FPGAOp.Max] = new FPGAOpInfo { Symbol = "max", Hint = "maximum", Operands = 2, BinaryOp = OpMax },
+      [FPGAOp.LogicAnd] = new FPGAOpInfo { Symbol = "&&", Hint = "logical and (both nonzero)", Operands = 2, BinaryOp = OpLogicAnd },
+      [FPGAOp.LogicOr] = new FPGAOpInfo { Symbol = "||", Hint = "logical or (either nonzero)", Operands = 2, BinaryOp = OpLogicOr },
+      [FPGAOp.BitAnd] = new FPGAOpInfo { Symbol = "&", Hint = "bitwise and", Operands = 2, BinaryOp = OpBitAnd },
+      [FPGAOp.BitOr] = new FPGAOpInfo { Symbol = "|", Hint = "bitwise or", Operands = 2, BinaryOp = OpBitOr },
+      [FPGAOp.BitXor] = new FPGAOpInfo { Symbol = "^", Hint = "bitwise xor", Operands = 2, BinaryOp = OpBitXor },
+      [FPGAOp.BitNand] = new FPGAOpInfo { Symbol = "nand", Hint = "bitwise nand", Operands = 2, BinaryOp = OpBitNand },
+      [FPGAOp.BitNor] = new FPGAOpInfo { Symbol = "nor", Hint = "bitwise nor", Operands = 2, BinaryOp = OpBitNor },
+      [FPGAOp.BitSla] = new FPGAOpInfo { Symbol = "sla", Hint = "shift left arithmetic", Operands = 2, BinaryOp = OpBitSla },
+      [FPGAOp.BitSll] = new FPGAOpInfo { Symbol = "sll", Hint = "shift left logical", Operands = 2, BinaryOp = OpBitSll },
+      [FPGAOp.BitSra] = new FPGAOpInfo { Symbol = "sra", Hint = "shift right arithmetic", Operands = 2, BinaryOp = OpBitSra },
+      [FPGAOp.BitSrl] = new FPGAOpInfo { Symbol = "srl", Hint = "shift right logical", Operands = 2, BinaryOp = OpBitSrl },
     };
 
     public static Dictionary<string, FPGAOp> SymbolToOp;
@@ -129,6 +136,40 @@ namespace fpgamod
       {
         SymbolToOp[InfoDict[op].Symbol] = op;
       }
+    }
+
+    // unary op impl
+    private static double OpLogicNot(double val) => val == 0 ? 1 : 0;
+    private static double OpBitNot(double val) => ProgrammableChip.LongToDouble(~ProgrammableChip.DoubleToLong(val, true));
+    // binary op impl
+    private static double OpAdd(double val1, double val2) => val1 + val2;
+    private static double OpSubtract(double val1, double val2) => val1 - val2;
+    private static double OpMultiply(double val1, double val2) => val1 * val2;
+    private static double OpDivide(double val1, double val2) => val1 / val2;
+    private static double OpMod(double val1, double val2) { var res = val1 % val2; return res < 0 ? res + val2 : res; }
+    private static double OpLess(double val1, double val2) => val1 < val2 ? 1 : 0;
+    private static double OpLessEquals(double val1, double val2) => val1 <= val2 ? 1 : 0;
+    private static double OpEquals(double val1, double val2) => val1 == val2 ? 1 : 0;
+    private static double OpGreaterEquals(double val1, double val2) => val1 >= val2 ? 1 : 0;
+    private static double OpGreater(double val1, double val2) => val1 > val2 ? 1 : 0;
+    private static double OpNotEquals(double val1, double val2) => val1 != val2 ? 1 : 0;
+    private static double OpMin(double val1, double val2) => val1 < val2 ? val1 : val2;
+    private static double OpMax(double val1, double val2) => val1 > val2 ? val1 : val2;
+    private static double OpLogicAnd(double val1, double val2) => val1 != 0 && val2 != 0 ? 1 : 0;
+    private static double OpLogicOr(double val1, double val2) => val1 != 0 || val2 != 0 ? 1 : 0;
+    private static Func<double, double, double> OpBitAnd = BinaryBitOp((val1, val2) => val1 & val2);
+    private static Func<double, double, double> OpBitOr = BinaryBitOp((val1, val2) => val1 | val2);
+    private static Func<double, double, double> OpBitXor = BinaryBitOp((val1, val2) => val1 ^ val2);
+    private static Func<double, double, double> OpBitNand = BinaryBitOp((val1, val2) => ~(val1 & val2));
+    private static Func<double, double, double> OpBitNor = BinaryBitOp((val1, val2) => ~(val1 | val2));
+    private static Func<double, double, double> OpBitSla = BinaryBitOp((val1, val2) => val1 << (int)val2);
+    private static Func<double, double, double> OpBitSll = BinaryBitOp((val1, val2) => val1 << (int)val2);
+    private static Func<double, double, double> OpBitSra = BinaryBitOp((val1, val2) => val1 >> (int)val2);
+    private static Func<double, double, double> OpBitSrl = BinaryBitOp((val1, val2) => val1 >> (int)val2, firstSigned: false);
+
+    private static Func<double, double, double> BinaryBitOp(Func<long, long, long> op, bool firstSigned = true)
+    {
+      return (val1, val2) => ProgrammableChip.LongToDouble(op(ProgrammableChip.DoubleToLong(val1, firstSigned), ProgrammableChip.DoubleToLong(val2, true)));
     }
   }
 }

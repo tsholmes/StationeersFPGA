@@ -227,7 +227,8 @@ namespace fpgamod
           var label = srcLabel == "" ? _indexText[i] : srcLabel;
           var tooltip = Def.GetLabel(address);
           var isOpen = (open & (1ul << i)) != 0;
-          if (isOpen)
+          var hasConfig = Def.HasConfig(address);
+          if (hasConfig)
           {
             ImGui.PushStyleColor(ImGuiCol.Button, _activeGridColors[0]);
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, _activeGridColors[1]);
@@ -246,6 +247,8 @@ namespace fpgamod
             var rmin = ImGui.GetItemRectMin();
             var rmax = rmin + vecSize - Vector2.one;
             ImGui.GetWindowDrawList().AddRect(rmin, rmax, _openBorderColor);
+          }
+          if (hasConfig) {
             ImGui.PopStyleColor(3);
           }
           if (ImGui.BeginDragDropSource())
