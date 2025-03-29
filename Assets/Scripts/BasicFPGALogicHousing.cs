@@ -19,7 +19,8 @@ namespace fpgamod
     IFPGAInput,
     IPatchOnLoad,
     ICustomUV,
-    ILocalizedPrefab
+    ILocalizedPrefab,
+    IFPGAHolder
   {
     private readonly double[] _inputValues = new double[FPGADef.InputCount];
     private long _inputModCount = 0;
@@ -129,6 +130,11 @@ namespace fpgamod
     public long GetFPGAInputModCount()
     {
       return this._inputModCount;
+    }
+
+    public BasicFPGAChip GetFPGAChip()
+    {
+      return this.FPGAChip;
     }
   }
 }

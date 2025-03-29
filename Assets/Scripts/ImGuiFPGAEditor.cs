@@ -38,13 +38,10 @@ namespace fpgamod
     private static FPGAMotherboard Motherboard = null;
     private static FPGADef Def = null;
     private static string _rawDef = "";
-    private static ulong _inputOpen = 0;
-    private static ulong _gateOpen = 0;
-    private static ulong _lutOpen = 0;
     private static string _gateEditSearch = "";
 
     // prebuilt strings
-    private static string[] _indexText;
+    private static readonly string[] _indexText;
     static ImGuiFPGAEditor()
     {
       _indexText = new string[64];
@@ -57,7 +54,7 @@ namespace fpgamod
     public static void ShowEditor(FPGAMotherboard motherboard)
     {
       Motherboard = motherboard;
-      Def = FPGADef.NewEmpty(); // TODO: actually save/load this
+      ReloadConfig();
       _show = true;
       InputMouse.SetMouseControl(true);
       UIBlocker.SetActive(true);
@@ -70,8 +67,55 @@ namespace fpgamod
       InputMouse.SetMouseControl(true);
       UIBlocker.SetActive(false);
       CursorManager.Instance?.OnApplicationFocus(true);
+      if (Motherboard != null)
+      {
+        Motherboard.RawConfig = Def.GetRaw();
+      }
       Motherboard = null;
       Def = null;
+    }
+
+    private static void ReloadConfig()
+    {
+      if (Motherboard == null)
+      {
+        Def = FPGADef.NewEmpty();
+        _rawDef = "";
+      }
+      else
+      {
+        Def = FPGADef.Parse(Motherboard.RawConfig);
+        _rawDef = Def.GetRaw();
+      }
+    }
+
+    private static void AutoOpen()
+    {
+      if (Motherboard == null)
+      {
+        return;
+      }
+      Motherboard.InputOpen = 0;
+      Motherboard.GateOpen = 0;
+      Motherboard.LutOpen = 0;
+      for (byte addr = 0; addr < FPGADef.AddressCount; addr++)
+      {
+        if (Def.HasConfig(addr))
+        {
+          if (FPGADef.IsIOAddress(addr))
+          {
+            Motherboard.InputOpen |= 1ul << (addr - FPGADef.InputOffset);
+          }
+          if (FPGADef.IsGateAddress(addr))
+          {
+            Motherboard.GateOpen |= 1ul << (addr - FPGADef.GateOffset);
+          }
+          if (FPGADef.IsLutAddress(addr))
+          {
+            Motherboard.LutOpen |= 1ul << (addr - FPGADef.LutOffset);
+          }
+        }
+      }
     }
 
     private static void UpdateSize()
@@ -145,6 +189,8 @@ namespace fpgamod
         ImGui.SetWindowSize(_size);
         ImGui.SetWindowPos(_pos);
 
+        DrawTopBar();
+
         var area = ImGui.GetContentRegionAvail();
         var gridSize = Math.Min(area.x / 16f, area.y / 27f);
         if (ImGui.BeginTable("top_layout", 2, ImGuiTableFlags.SizingFixedFit))
@@ -163,9 +209,7 @@ namespace fpgamod
             if (ImGui.BeginTabItem("Editor"))
             {
               ImGui.BeginChild("EditorChild");
-              DrawEditorInputs();
-              DrawEditorGates();
-              DrawEditorLUTs();
+              DrawEditors();
               ImGui.EndChild();
               ImGui.EndTabItem();
             }
@@ -187,19 +231,61 @@ namespace fpgamod
       ImGui.End();
     }
 
+    private static void DrawTopBar()
+    {
+      ImGui.PushID("topBar");
+      ImGui.SetNextItemWidth(_size.x * 0.3f);
+      if (ImGui.BeginCombo("##holderCombo", Motherboard.GetSelectedFPGAHolderName()))
+      {
+        for (var i = 0; i < Motherboard.ConnectedFPGAHolders.Count; i++)
+        {
+          var name = Motherboard.ConnectedFPGAHolders[i].DisplayName;
+          var selected = i == Motherboard.SelectedHolderIndex;
+          ImGui.PushID(i);
+          if (ImGui.Selectable(name, selected))
+          {
+            Motherboard.SelectedHolderIndex = i;
+          }
+          ImGui.PopID();
+        }
+        ImGui.EndCombo();
+      }
+      ImGui.SameLine();
+      if (ImGui.Button("Import"))
+      {
+        Motherboard.Import();
+        ReloadConfig();
+        AutoOpen();
+      }
+      ItemTooltip("Warning: this will overwrite editor contents");
+      ImGui.SameLine();
+      if (ImGui.Button("Export"))
+      {
+        Motherboard.RawConfig = Def.GetRaw();
+        Motherboard.Export();
+      }
+      ImGui.PopID();
+    }
+
     private static void DrawInputGrid(float size)
     {
-      DrawGrid(size, "Inputs", "inputTable", 0, ref _inputOpen);
+      var open = Motherboard.InputOpen;
+      DrawGrid(size, "Inputs", "inputTable", 0, ref open);
+      Motherboard.InputOpen = open;
     }
 
     private static void DrawGateGrid(float size)
     {
-      DrawGrid(size, "Gates", "gateTable", 64, ref _gateOpen);
+      var open = Motherboard.GateOpen;
+      DrawGrid(size, "Gates", "gateTable", 64, ref open);
+      Motherboard.GateOpen = open;
     }
 
     private static void DrawLutGrid(float size)
     {
-      DrawGrid(size, "Lookup Table", "lutTable", 128, ref _lutOpen);
+      var open = Motherboard.LutOpen;
+      DrawGrid(size, "Lookup Table", "lutTable", 128, ref open);
+      Motherboard.LutOpen = open;
     }
 
     private static void DrawGrid(float size, string title, string id, byte addressOffset, ref ulong open)
@@ -248,7 +334,8 @@ namespace fpgamod
             var rmax = rmin + vecSize - Vector2.one;
             ImGui.GetWindowDrawList().AddRect(rmin, rmax, _openBorderColor);
           }
-          if (hasConfig) {
+          if (hasConfig)
+          {
             ImGui.PopStyleColor(3);
           }
           if (ImGui.BeginDragDropSource())
@@ -263,9 +350,25 @@ namespace fpgamod
       ImGui.PopStyleVar(2);
     }
 
+    private static void DrawEditors()
+    {
+      if ((Motherboard.InputOpen | Motherboard.GateOpen | Motherboard.LutOpen) == 0)
+      {
+        ImGui.BeginDisabled();
+        ImGui.Text("Select a configuration in the grid to edit");
+        ImGui.EndDisabled();
+      }
+      else
+      {
+        DrawEditorInputs();
+        DrawEditorGates();
+        DrawEditorLUTs();
+      }
+    }
+
     private static void DrawEditorInputs()
     {
-      if (Def == null || _inputOpen == 0)
+      if (Def == null || Motherboard.InputOpen == 0)
       {
         return;
       }
@@ -277,7 +380,7 @@ namespace fpgamod
         ImGui.TableHeadersRow();
         for (var i = 0; i < 64; i++)
         {
-          if ((_inputOpen & (1ul << i)) != 0)
+          if ((Motherboard.InputOpen & (1ul << i)) != 0)
           {
             ImGui.TableNextRow();
             DrawEditorInput(i);
@@ -310,7 +413,7 @@ namespace fpgamod
 
     private static void DrawEditorGates()
     {
-      if (Def == null || _gateOpen == 0)
+      if (Def == null || Motherboard.GateOpen == 0)
       {
         return;
       }
@@ -325,7 +428,7 @@ namespace fpgamod
         ImGui.TableHeadersRow();
         for (var i = 0; i < 64; i++)
         {
-          if ((_gateOpen & (1ul << i)) != 0)
+          if ((Motherboard.GateOpen & (1ul << i)) != 0)
           {
             ImGui.TableNextRow();
             DrawEditorGate(i);
@@ -507,7 +610,7 @@ namespace fpgamod
 
     private static void DrawEditorLUTs()
     {
-      if (Def == null || _lutOpen == 0)
+      if (Def == null || Motherboard.LutOpen == 0)
       {
         return;
       }
@@ -520,7 +623,7 @@ namespace fpgamod
         ImGui.TableHeadersRow();
         for (var i = 0; i < 64; i++)
         {
-          if ((_lutOpen & (1ul << i)) != 0)
+          if ((Motherboard.LutOpen & (1ul << i)) != 0)
           {
             ImGui.TableNextRow();
             DrawEditorLUT(i);

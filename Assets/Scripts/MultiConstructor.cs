@@ -45,6 +45,8 @@ namespace fpgamod
       }
     }
 
+    bool IPatchOnLoad.SkipMaterialPatch() => this.ModelCopyPrefab != "";
+
     public Localization.LocalizationThingDat GetLocalization()
     {
       if (string.IsNullOrEmpty(this.BaseLocalizedName) && string.IsNullOrEmpty(this.BaseLocalizedDescription))
