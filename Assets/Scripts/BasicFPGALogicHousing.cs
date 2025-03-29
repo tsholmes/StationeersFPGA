@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Motherboards;
@@ -17,7 +18,8 @@ namespace fpgamod
     IMemoryWritable,
     IFPGAInput,
     IPatchOnLoad,
-    ICustomUV
+    ICustomUV,
+    ILocalizedPrefab
   {
     private readonly double[] _inputValues = new double[FPGADef.InputCount];
     private long _inputModCount = 0;
@@ -30,6 +32,8 @@ namespace fpgamod
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
       this.Thumbnail = StationeersModsUtility.FindPrefab("StructureCircuitHousing").Thumbnail;
       this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
+
+      FPGAMod.AddLocalizationString("FallbackSlotsName", "FPGAChip", "FpgaChip");
     }
 
     public Vector2? GetUV(GameObject obj)
@@ -47,6 +51,22 @@ namespace fpgamod
         return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
       }
       return null;
+    }
+
+    public Localization.LocalizationThingDat GetLocalization()
+    {
+      return new Localization.LocalizationThingDat
+      {
+        PrefabName = "FPGA Logic Housing",
+        Description = ""
+        + "Holds a {THING:ItemBasicFPGAChip} to be accessed by {THING:ItemIntegratedCircuit10}. "
+        + "The chip is memory-mapped allowing read/write access to both configuration and calculations via IC10 get/getd/put/putd instructions.\n"
+        + "- Writing to addresses 0-63 sets input values\n"
+        + "- Reading from addresses 0-63 reads gate calculation results\n"
+        + "- Reading/Writing addresses 64-127 accesses raw gate configuration values (address 64 accesses configuration for gate00)\n"
+        + "- Reading/Writing address 128-191 accesses lookup table values (address 128 accesses lut00)\n"
+        + "The gate calculations happen continuously, so inputs can be written to and results read multiple times within a logic tick."
+      };
     }
 
     public void ClearMemory()

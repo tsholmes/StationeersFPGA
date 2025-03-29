@@ -4,6 +4,9 @@ using HarmonyLib;
 using StationeersMods.Interface;
 using Assets.Scripts.Objects;
 using UnityEngine;
+using Assets.Scripts;
+using System.Reflection;
+using System.Collections.Generic;
 [StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.2.4657.21547.1")]
 public class FPGAMod : ModBehaviour
 {
@@ -45,5 +48,57 @@ public class FPGAMod : ModBehaviour
     var uv = new Vector2[mesh.vertices.Length];
     Array.Fill(uv, val);
     mesh.uv = uv;
+  }
+
+  public static void PatchEnumCollection<T1, T2>(EnumCollection<T1, T2> collection, T1 val, string name)
+  where T1 : Enum, new()
+  where T2 : IConvertible, IEquatable<T2>
+  {
+    if (name.Length > collection.LongestName.Length)
+    {
+      throw new Exception("not implemented");
+    }
+    var origLength = collection.Length;
+    var values = collection.Values;
+    var valuesAsInts = collection.ValuesAsInts;
+    var names = collection.Names;
+    var paddedNames = collection.PaddedNames;
+    Array.Resize(ref values, origLength + 1);
+    Array.Resize(ref valuesAsInts, origLength + 1);
+    Array.Resize(ref names, origLength + 1);
+    Array.Resize(ref paddedNames, origLength + 1);
+
+    values[origLength] = val;
+    valuesAsInts[origLength] = (T2)(object)val;
+    names[origLength] = name;
+    paddedNames[origLength] = name.PadRight(collection.LongestName.Length, ' ');
+
+    collection.Values = values;
+    collection.ValuesAsInts = valuesAsInts;
+
+    var nameField = collection.GetType().GetField(nameof(collection.Names), BindingFlags.Instance | BindingFlags.Public);
+    nameField.SetValue(collection, names);
+    var paddedNamesField = collection.GetType().GetField(nameof(collection.PaddedNames), BindingFlags.Instance | BindingFlags.Public);
+    paddedNamesField.SetValue(collection, paddedNames);
+    var lengthField = collection.GetType().GetField($"<{nameof(collection.Length)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+    lengthField.SetValue(collection, origLength + 1);
+  }
+
+  public static void AddLocalizationString(string fieldName, string key, string value)
+  {
+    var field = typeof(Localization).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic);
+    var intKey = Animator.StringToHash(key);
+    var dict = field.GetValue(null) as Dictionary<int, string>;
+    dict[intKey] = value;
+  }
+
+  public static void AddLocalizationThing(int prefabHash, Localization.LocalizationThingDat localization)
+  {
+    if (localization == null) {
+      return;
+    }
+    var field = typeof(Localization).GetField("FallbackThingsLocalized", BindingFlags.Static | BindingFlags.NonPublic);
+    var dict = field.GetValue(null) as Dictionary<int, Localization.LocalizationThingDat>;
+    dict[prefabHash] = localization;
   }
 }

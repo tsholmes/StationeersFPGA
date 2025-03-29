@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts;
 using Assets.Scripts.Objects.Items;
 using StationeersMods.Interface;
 using UnityEngine;
@@ -9,7 +10,8 @@ namespace fpgamod
 {
   public class FPGAMotherboard :
     Motherboard,
-    IPatchOnLoad
+    IPatchOnLoad,
+    ILocalizedPrefab
   {
     public void PatchOnLoad()
     {
@@ -42,6 +44,16 @@ namespace fpgamod
     public void OnEdit()
     {
       ImGuiFPGAEditor.ShowEditor(this);
+    }
+
+    public Localization.LocalizationThingDat GetLocalization()
+    {
+      return new Localization.LocalizationThingDat
+      {
+        PrefabName = "FPGA Editor Motherboard",
+        Description = ""
+        + "Allows editing a {THING:ItemBasicFPGAChip} placed in a {THING:StructureBasicFPGALogicHousing} on a connected data network."
+      };
     }
   }
 }

@@ -102,8 +102,8 @@ MonoBehaviour:
   SolarHeatingScale: 0.1
   WeatherDamageScale: 1
   shatterTemperature: 1
-  flashpointTemperature: -1
-  autoignitionTemperature: -1
+  flashpointTemperature: 373.15
+  autoignitionTemperature: 573.15
   BurnTime: 5
   ThingHealth: 100
   EnergyReleasedWhenBurned: 100000

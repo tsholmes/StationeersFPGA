@@ -13,7 +13,7 @@ namespace fpgamod
   public class PrefabPatch
   {
     public static ReadOnlyCollection<GameObject> prefabs { get; set; }
-    [HarmonyPatch(typeof(Prefab), "LoadAll")]
+    [HarmonyPatch(typeof(Prefab), nameof(Prefab.LoadAll))]
     public static void Prefix()
     {
       try
@@ -31,6 +31,10 @@ namespace fpgamod
           {
             patchable.PatchOnLoad();
             doMatPatch = !patchable.SkipMaterialPatch();
+          }
+          if (thing is ILocalizedPrefab localized)
+          {
+            FPGAMod.AddLocalizationThing(thing.PrefabHash, localized.GetLocalization());
           }
           Blueprintify(thing);
           if (doMatPatch)

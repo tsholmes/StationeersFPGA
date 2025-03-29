@@ -16,7 +16,8 @@ namespace fpgamod
     IMemoryReadable,
     IMemoryWritable,
     IPatchOnLoad,
-    ICustomUV
+    ICustomUV,
+    ILocalizedPrefab
   {
 
     public const Slot.Class FPGASlotType = (Slot.Class)0x69;
@@ -41,6 +42,8 @@ namespace fpgamod
     {
       this.SlotType = FPGASlotType;
       this.Thumbnail = StationeersModsUtility.FindPrefab("ItemIntegratedCircuit10").Thumbnail;
+
+      FPGAMod.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, "FPGAChip");
     }
 
     public Vector2? GetUV(GameObject obj)
@@ -52,10 +55,38 @@ namespace fpgamod
       return null;
     }
 
+    public Localization.LocalizationThingDat GetLocalization()
+    {
+      return new Localization.LocalizationThingDat
+      {
+        PrefabName = "FPGA Chip",
+        Description = ""
+        + "The Field-Programmable Gate Array contains 64 configurable gates to automate calculations. "
+        + "The gates can be configured by the {THING:MotherboardFPGA}, or through logic when placed in a {THING:StructureBasicFPGALogicHousing}."
+      };
+    }
+
+    public override ThingSaveData SerializeSave()
+    {
+      var saveData = new BasicFPGAChipSaveData();
+      var baseData = saveData as ThingSaveData;
+      this.InitialiseSaveData(ref baseData);
+      return saveData;
+    }
+
     public override void DeserializeSave(ThingSaveData saveData)
     {
       base.DeserializeSave(saveData);
-      this.Recompile();
+      this.RawConfig = (saveData as BasicFPGAChipSaveData)?.RawConfig;
+    }
+
+    protected override void InitialiseSaveData(ref ThingSaveData savedData)
+    {
+      base.InitialiseSaveData(ref savedData);
+      if (savedData is BasicFPGAChipSaveData fpgaData)
+      {
+        fpgaData.RawConfig = this.RawConfig;
+      }
     }
 
     public int GetStackSize()
