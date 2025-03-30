@@ -13,6 +13,7 @@ namespace fpgamod
     public static void Prefix(ref List<System.Type> extraTypes)
     {
       extraTypes.Add(typeof(BasicFPGAChipSaveData));
+      extraTypes.Add(typeof(FPGAMotherboardSaveData));
     }
   }
 }

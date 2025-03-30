@@ -7,6 +7,9 @@ using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts;
 using System;
 using StationeersMods.Interface;
+using Assets.Scripts.Objects.Items;
+using Assets.Scripts.Inventory;
+using Assets.Scripts.Localization2;
 
 namespace fpgamod
 {
@@ -160,6 +163,29 @@ namespace fpgamod
     private void Recompile()
     {
       FPGAGate.Compile(this._def, this._gates);
+    }
+
+    public override Thing.DelayedActionInstance AttackWith(Attack attack, bool doAction = true)
+    {
+      if (attack.SourceItem is not Labeller labeller) {
+        return base.AttackWith(attack, doAction);
+      }
+      var action = new Thing.DelayedActionInstance()
+      {
+        Duration = 0f,
+        ActionMessage = ActionStrings.Rename
+      };
+      if (!labeller.OnOff) {
+        return action.Fail(GameStrings.DeviceNotOn);
+      }
+      if (!labeller.IsOperable) {
+        return action.Fail(GameStrings.DeviceNoPower);
+      }
+      if (!doAction) {
+        return action;
+      }
+      labeller.Rename(this);
+      return action;
     }
   }
 }

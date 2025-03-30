@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
+using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
@@ -17,7 +18,7 @@ namespace fpgamod
   {
     public readonly List<IFPGAHolder> ConnectedFPGAHolders = new List<IFPGAHolder>();
     // Editor State
-    // TODO: savedata and network update for these
+    // TODO: network update for these
     public int SelectedHolderIndex { get; set; }
     public string RawConfig { get; set; }
     public ulong InputOpen { get; set; }
@@ -58,6 +59,42 @@ namespace fpgamod
         Description = ""
         + "Allows editing a {THING:ItemBasicFPGAChip} placed in a {THING:StructureBasicFPGALogicHousing} on a connected data network."
       };
+    }
+
+    public override ThingSaveData SerializeSave()
+    {
+      var saveData = new FPGAMotherboardSaveData();
+      var baseData = saveData as ThingSaveData;
+      this.InitialiseSaveData(ref baseData);
+      return saveData;
+    }
+
+    public override void DeserializeSave(ThingSaveData baseData)
+    {
+      base.DeserializeSave(baseData);
+      if (baseData is not FPGAMotherboardSaveData saveData)
+      {
+        return;
+      }
+      this.SelectedHolderIndex = saveData.SelectedHolderIndex;
+      this.RawConfig = saveData.RawConfig;
+      this.InputOpen = saveData.InputOpen;
+      this.GateOpen = saveData.GateOpen;
+      this.LutOpen = saveData.LutOpen;
+    }
+
+    protected override void InitialiseSaveData(ref ThingSaveData baseData)
+    {
+      base.InitialiseSaveData(ref baseData);
+      if (baseData is not FPGAMotherboardSaveData saveData)
+      {
+        return;
+      }
+      saveData.SelectedHolderIndex = this.SelectedHolderIndex;
+      saveData.RawConfig = this.RawConfig;
+      saveData.InputOpen = this.InputOpen;
+      saveData.GateOpen = this.GateOpen;
+      saveData.LutOpen = this.LutOpen;
     }
 
     public override bool IsOperable => true;

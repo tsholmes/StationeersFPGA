@@ -132,7 +132,58 @@ MonoBehaviour:
     Animator: {fileID: 0}
     JoinInProgressSync: 0
     Layer: 0
-    CanKeyInteract: 1
+    CanKeyInteract: 0
+    KeyMap: 
+    AssociatedAudioEvents: []
+    ActionName: 
+    _state: 0
+  - StringKey: Powered
+    StringHash: 87111221
+    Parent: {fileID: 5650100839866074968}
+    Collider: {fileID: 0}
+    FakeCollider: {fileID: 0}
+    Bounds:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    Action: 42
+    Animator: {fileID: 0}
+    JoinInProgressSync: 1
+    Layer: 0
+    CanKeyInteract: 0
+    KeyMap: 
+    AssociatedAudioEvents: []
+    ActionName: 
+    _state: 0
+  - StringKey: OnOff
+    StringHash: 734558724
+    Parent: {fileID: 5650100839866074968}
+    Collider: {fileID: 0}
+    FakeCollider: {fileID: 0}
+    Bounds:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0.03, y: 0.03, z: 0.03}
+    Action: 36
+    Animator: {fileID: 0}
+    JoinInProgressSync: 1
+    Layer: 0
+    CanKeyInteract: 0
+    KeyMap: 
+    AssociatedAudioEvents: []
+    ActionName: 
+    _state: 0
+  - StringKey: Error
+    StringHash: -1675848843
+    Parent: {fileID: 5650100839866074968}
+    Collider: {fileID: 0}
+    FakeCollider: {fileID: 0}
+    Bounds:
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 0, y: 0, z: 0}
+    Action: 43
+    Animator: {fileID: 0}
+    JoinInProgressSync: 1
+    Layer: 0
+    CanKeyInteract: 0
     KeyMap: 
     AssociatedAudioEvents: []
     ActionName: 

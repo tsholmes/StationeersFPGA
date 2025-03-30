@@ -6,7 +6,9 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Motherboards;
 using Assets.Scripts.Objects.Pipes;
+using Objects.Electrical;
 using StationeersMods.Interface;
+using UnityEditor;
 using UnityEngine;
 
 namespace fpgamod
@@ -31,10 +33,28 @@ namespace fpgamod
     public void PatchOnLoad()
     {
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
-      this.Thumbnail = StationeersModsUtility.FindPrefab("StructureCircuitHousing").Thumbnail;
       this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
 
       FPGAMod.AddLocalizationString("FallbackSlotsName", "FPGAChip", "FpgaChip");
+
+      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
+      this.Thumbnail = src.Thumbnail;
+    }
+
+    public override void OnPrefabLoad()
+    {
+      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
+      var srcOnOff = src.transform.Find("OnOffNoShadow");
+      var onOff = GameObject.Instantiate(srcOnOff, this.transform);
+      this.Interactables[2].Collider = onOff.GetComponent<SphereCollider>();
+
+      var pos = onOff.transform.localPosition;
+      pos.x = pos.y = 0.155f;
+      onOff.transform.localPosition = pos;
+
+      this.OnOffButton = onOff.GetComponent<LogicOnOffButton>();
+
+      base.OnPrefabLoad();
     }
 
     public Vector2? GetUV(GameObject obj)
@@ -90,6 +110,19 @@ namespace fpgamod
       if (this.FPGAChip == null)
       {
         throw new NullReferenceException();
+      }
+      if (address < 0)
+      {
+        throw new StackUnderflowException();
+      }
+      if (address > 255)
+      {
+        throw new StackOverflowException();
+      }
+      var addr = (byte)address;
+      if (FPGADef.IsIOAddress(addr) && (!this.OnOff || !this.Powered)) {
+        // we only require power for reading gate outputs. everything else is just configuration.
+        return double.NaN;
       }
       return this.FPGAChip.ReadMemory(address);
     }
