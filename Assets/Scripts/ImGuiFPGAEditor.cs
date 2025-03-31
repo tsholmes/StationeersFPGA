@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Assets.Scripts;
 using Assets.Scripts.UI;
+using Assets.Scripts.Util;
 using BepInEx;
 using ImGuiNET;
 using UnityEngine;
@@ -40,6 +42,9 @@ namespace fpgamod
     private static string _rawDef = "";
     private static string _gateEditSearch = "";
 
+    private static string[] _gridLabels = new string[FPGADef.AddressCount];
+    private static string[] _gridLabelsSquare = new string[FPGADef.AddressCount];
+
     // prebuilt strings
     private static readonly string[] _indexText;
     static ImGuiFPGAEditor()
@@ -49,6 +54,8 @@ namespace fpgamod
       {
         _indexText[i] = $"{i:D2}";
       }
+      Array.Fill(_gridLabels, "");
+      Array.Fill(_gridLabelsSquare, "");
     }
 
     public static void ShowEditor(FPGAMotherboard motherboard)
@@ -267,13 +274,17 @@ namespace fpgamod
       }
       ImGui.SameLine(region.x * 0.75f);
       ImGui.SetNextItemWidth(region.x * 0.25f);
-      if (ImGui.BeginCombo("##exampleCombo", "Examples")) {
-        foreach (var example in FPGAExamples.Examples) {
-          if (ImGui.Selectable(example.Title)) {
+      if (ImGui.BeginCombo("##exampleCombo", "Examples"))
+      {
+        foreach (var example in FPGAExamples.Examples)
+        {
+          if (ImGui.Selectable(example.Title))
+          {
             Def = FPGADef.Parse(example.RawConfig);
             _rawDef = example.RawConfig;
           }
-          if (!string.IsNullOrEmpty(example.Tooltip)) {
+          if (!string.IsNullOrEmpty(example.Tooltip))
+          {
             ItemTooltip(example.Tooltip);
           }
         }
@@ -318,6 +329,7 @@ namespace fpgamod
         }
         for (var i = 0; i < 64; i++)
         {
+          ImGui.PushID(i);
           var col = i % 8;
           if (col == 0)
           {
@@ -328,6 +340,7 @@ namespace fpgamod
           var srcLabel = Def.GetLabel(address, nameFallback: false);
           var label = srcLabel == "" ? _indexText[i] : srcLabel;
           var tooltip = Def.GetLabel(address);
+          var sqlabel = GetGridLabel(address, label, size - 2);
           var isOpen = (open & (1ul << i)) != 0;
           var hasConfig = Def.HasConfig(address);
           if (hasConfig)
@@ -336,9 +349,9 @@ namespace fpgamod
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, _activeGridColors[1]);
             ImGui.PushStyleColor(ImGuiCol.ButtonActive, _activeGridColors[2]);
           }
-          var textWidth = ImGui.CalcTextSize(label).x;
-          ImGui.SetWindowFontScale(Math.Min(1f, (size - 2) / textWidth));
-          if (ImGui.Button(label, vecSize))
+          var textSize = ImGui.CalcTextSize(sqlabel);
+          ImGui.SetWindowFontScale(Math.Min(1f, (size - 2) / Math.Max(textSize.x, textSize.y)));
+          if (ImGui.Button(sqlabel, vecSize))
           {
             open ^= 1ul << i;
           }
@@ -360,6 +373,7 @@ namespace fpgamod
             ImGui.Text(label);
             ImGui.EndDragDropSource();
           }
+          ImGui.PopID();
         }
         ImGui.EndTable();
       }
@@ -488,7 +502,7 @@ namespace fpgamod
           }
           var searchLower = _gateEditSearch.ToLower();
           var hasFound = false;
-          for (var op = FPGAOp.None; op <= FPGAOps.Count; op++)
+          for (var op = FPGAOp.None; op < FPGAOps.Count; op++)
           {
             var info = FPGAOps.GetOpInfo(op);
             if (info.Symbol.StartsWith(searchLower) || info.Hint.Contains(searchLower))
@@ -698,6 +712,54 @@ namespace fpgamod
       {
         ImGui.SetTooltip(text);
       }
+    }
+
+    private static string GetGridLabel(byte address, string src, float minWrapWidth)
+    {
+      if (!string.ReferenceEquals(_gridLabels[address], src))
+      {
+        var lo = 1;
+        var hi = src.Length;
+        if (ImGui.CalcTextSize(src).x <= minWrapWidth)
+        {
+          lo = hi;
+        }
+        while (lo < hi)
+        {
+          var mid = (lo + hi) >> 1;
+          var sz = ImGui.CalcTextSize(WrapString(src, mid));
+          if (sz.x >= sz.y)
+          {
+            hi = mid;
+          }
+          else
+          {
+            lo = mid + 1;
+          }
+        }
+        _gridLabels[address] = src;
+        // make as even as possible while keeping number of lines
+        var lines = (src.Length + lo - 1) / lo;
+        lo = (src.Length + lines - 1) / lines;
+        _gridLabelsSquare[address] = WrapString(src, lo);
+      }
+      return _gridLabelsSquare[address];
+    }
+
+    private static string WrapString(string src, int charsPerLine)
+    {
+      var first = true;
+      var sb = new StringBuilder();
+      foreach (var line in src.SplitBy(charsPerLine))
+      {
+        if (!first)
+        {
+          sb.Append('\n');
+        }
+        first = false;
+        sb.Append(line);
+      }
+      return sb.ToString();
     }
   }
 }
