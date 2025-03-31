@@ -233,8 +233,9 @@ namespace fpgamod
 
     private static void DrawTopBar()
     {
+      var region = ImGui.GetContentRegionAvail();
       ImGui.PushID("topBar");
-      ImGui.SetNextItemWidth(_size.x * 0.3f);
+      ImGui.SetNextItemWidth(region.x * 0.25f);
       if (ImGui.BeginCombo("##holderCombo", Motherboard.GetSelectedFPGAHolderName()))
       {
         for (var i = 0; i < Motherboard.ConnectedFPGAHolders.Count; i++)
@@ -264,6 +265,21 @@ namespace fpgamod
         Motherboard.RawConfig = Def.GetRaw();
         Motherboard.Export();
       }
+      ImGui.SameLine(region.x * 0.75f);
+      ImGui.SetNextItemWidth(region.x * 0.25f);
+      if (ImGui.BeginCombo("##exampleCombo", "Examples")) {
+        foreach (var example in FPGAExamples.Examples) {
+          if (ImGui.Selectable(example.Title)) {
+            Def = FPGADef.Parse(example.RawConfig);
+            _rawDef = example.RawConfig;
+          }
+          if (!string.IsNullOrEmpty(example.Tooltip)) {
+            ItemTooltip(example.Tooltip);
+          }
+        }
+        ImGui.EndCombo();
+      }
+      ItemTooltip("Warning: this will overwrite editor contents");
       ImGui.PopID();
     }
 
