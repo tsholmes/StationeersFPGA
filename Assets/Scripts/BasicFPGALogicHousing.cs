@@ -89,7 +89,8 @@ namespace fpgamod
         + "- Reading from addresses 0-63 reads gate calculation results\n"
         + "- Reading/Writing addresses 64-127 accesses raw gate configuration values (address 64 accesses configuration for gate00)\n"
         + "- Reading/Writing address 128-191 accesses lookup table values (address 128 accesses lut00)\n"
-        + "The gate calculations happen continuously, so inputs can be written to and results read multiple times within a logic tick."
+        + "The gate calculations happen continuously, so inputs can be written to and results read multiple times within a logic tick. "
+        + "Input values are volatile and should always be written to on the same tick as gate outputs are read."
       };
     }
 

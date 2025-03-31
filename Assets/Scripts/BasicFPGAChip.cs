@@ -10,6 +10,7 @@ using StationeersMods.Interface;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Inventory;
 using Assets.Scripts.Localization2;
+using Assets.Scripts.Networking;
 
 namespace fpgamod
 {
@@ -20,10 +21,12 @@ namespace fpgamod
     IMemoryWritable,
     IPatchOnLoad,
     ICustomUV,
-    ILocalizedPrefab
+    ILocalizedPrefab,
+    ISourceCode
   {
-
     public const Slot.Class FPGASlotType = (Slot.Class)0x69;
+
+    private const ushort FLAG_RAWCONFIG = 256;
 
     private FPGADef _def = FPGADef.NewEmpty();
     public string RawConfig
@@ -33,7 +36,7 @@ namespace fpgamod
       {
         this._def = FPGADef.Parse(value);
         this.Recompile();
-        // TODO: mark for network update
+        this.SendUpdate();
       }
     }
 
@@ -167,7 +170,8 @@ namespace fpgamod
 
     public override Thing.DelayedActionInstance AttackWith(Attack attack, bool doAction = true)
     {
-      if (attack.SourceItem is not Labeller labeller) {
+      if (attack.SourceItem is not Labeller labeller)
+      {
         return base.AttackWith(attack, doAction);
       }
       var action = new Thing.DelayedActionInstance()
@@ -175,17 +179,76 @@ namespace fpgamod
         Duration = 0f,
         ActionMessage = ActionStrings.Rename
       };
-      if (!labeller.OnOff) {
+      if (!labeller.OnOff)
+      {
         return action.Fail(GameStrings.DeviceNotOn);
       }
-      if (!labeller.IsOperable) {
+      if (!labeller.IsOperable)
+      {
         return action.Fail(GameStrings.DeviceNoPower);
       }
-      if (!doAction) {
+      if (!doAction)
+      {
         return action;
       }
       labeller.Rename(this);
       return action;
+    }
+
+    public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
+    {
+      base.BuildUpdate(writer, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType)) {
+        writer.WriteAscii(this.GetSourceCode());
+      }
+    }
+
+    public override void ProcessUpdate(RocketBinaryReader reader, ushort networkUpdateType)
+    {
+      base.ProcessUpdate(reader, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType)) {
+        this.SetSourceCode(new string(reader.ReadChars()));
+      }
+    }
+
+    public override void SerializeOnJoin(RocketBinaryWriter writer)
+    {
+      base.SerializeOnJoin(writer);
+      writer.WriteAscii(this.GetSourceCode());
+    }
+
+    public override void DeserializeOnJoin(RocketBinaryReader reader)
+    {
+      base.DeserializeOnJoin(reader);
+      this.SetSourceCode(new string(reader.ReadChars()));
+    }
+
+    char[] ISourceCode.SourceCodeCharArray { get; set; }
+    int ISourceCode.SourceCodeWritePointer { get; set; }
+
+    public void SendUpdate()
+    {
+      if (NetworkManager.IsClient)
+      {
+        ISourceCode.SendSourceCodeToServer(this.GetSourceCode(), this.ReferenceId);
+      }
+      else
+      {
+        if (!NetworkManager.IsServer)
+          return;
+        this.NetworkUpdateFlags |= FLAG_RAWCONFIG;
+      }
+    }
+
+    public void SetSourceCode(string sourceCode)
+    {
+      this._def = FPGADef.Parse(sourceCode);
+      this.Recompile();
+    }
+
+    public AsciiString GetSourceCode()
+    {
+      return AsciiString.Parse(this._def.GetRaw());
     }
   }
 }

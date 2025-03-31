@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
+using Assets.Scripts.Networking;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
@@ -14,13 +15,25 @@ namespace fpgamod
   public class FPGAMotherboard :
     Motherboard,
     IPatchOnLoad,
-    ILocalizedPrefab
+    ILocalizedPrefab,
+    ISourceCode
   {
     public readonly List<IFPGAHolder> ConnectedFPGAHolders = new List<IFPGAHolder>();
+    private const ushort FLAG_RAWCONFIG = 256;
+
+    private string _rawConfig = "";
+    public string RawConfig
+    {
+      get => _rawConfig;
+      set
+      {
+        this._rawConfig = value;
+        this.SendUpdate();
+      }
+    }
+
     // Editor State
-    // TODO: network update for these
     public int SelectedHolderIndex { get; set; }
-    public string RawConfig { get; set; }
     public ulong InputOpen { get; set; }
     public ulong GateOpen { get; set; }
     public ulong LutOpen { get; set; }
@@ -181,7 +194,67 @@ namespace fpgamod
         return;
       }
       var chip = this.ConnectedFPGAHolders[this.SelectedHolderIndex].GetFPGAChip();
-      chip.RawConfig = this.RawConfig;
+      if (chip != null)
+      {
+        chip.RawConfig = this.RawConfig;
+      }
+    }
+
+    public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
+    {
+      base.BuildUpdate(writer, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
+      {
+        writer.WriteAscii(this.GetSourceCode());
+      }
+    }
+
+    public override void ProcessUpdate(RocketBinaryReader reader, ushort networkUpdateType)
+    {
+      base.ProcessUpdate(reader, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
+      {
+        this.SetSourceCode(new string(reader.ReadChars()));
+      }
+    }
+
+    public override void SerializeOnJoin(RocketBinaryWriter writer)
+    {
+      base.SerializeOnJoin(writer);
+      writer.WriteAscii(this.GetSourceCode());
+    }
+
+    public override void DeserializeOnJoin(RocketBinaryReader reader)
+    {
+      base.DeserializeOnJoin(reader);
+      this.SetSourceCode(new string(reader.ReadChars()));
+    }
+
+    public char[] SourceCodeCharArray { get; set; }
+    public int SourceCodeWritePointer { get; set; }
+
+    public void SendUpdate()
+    {
+      if (NetworkManager.IsClient)
+      {
+        ISourceCode.SendSourceCodeToServer(this.GetSourceCode(), this.ReferenceId);
+      }
+      else
+      {
+        if (!NetworkManager.IsServer)
+          return;
+        this.NetworkUpdateFlags |= FLAG_RAWCONFIG;
+      }
+    }
+
+    public void SetSourceCode(string sourceCode)
+    {
+      this._rawConfig = sourceCode;
+    }
+
+    public AsciiString GetSourceCode()
+    {
+      return AsciiString.Parse(this.RawConfig);
     }
   }
 }
