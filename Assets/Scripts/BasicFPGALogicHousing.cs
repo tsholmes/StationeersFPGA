@@ -71,6 +71,9 @@ namespace fpgamod
       {
         return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
       }
+      if (obj == this.transform.Find("BasicFPGAHousing_pins/default").gameObject) {
+        return FPGAMod.UVTile(64, 3, 7);
+      }
       return null;
     }
 

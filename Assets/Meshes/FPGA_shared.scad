@@ -35,6 +35,12 @@ alignHoleRadius = 0.005;
 alignHoleOffset = chipBaseSize/2 - 0.02;
 alignHoleDepth = 0.005;
 alignHoleSides = 8;
+decoPinCount = 8;
+decoPinWidth = 0.036;
+decoPinLength = 0.034;
+decoPinHeight = 0.028;
+decoPinSpacing = 0.049;
+decoPinBevelSize = 0.010;
 
 module cablecutout() {
   cableradius = 0.025;

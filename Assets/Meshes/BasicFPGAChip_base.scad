@@ -1,6 +1,7 @@
 include <FPGA_shared.scad>;
 use <BasicFPGAHousing_full.scad>;
 use <BasicFPGAChip_pins.scad>;
+use <Text_FPGA.scad>;
 
 module BasicFPGAChip_base() {
   bevelHeight = (chipBaseHeight - pinHorizHeight)/2;
@@ -20,4 +21,5 @@ module BasicFPGAChip_base() {
 
 BasicFPGAChip_base();
 %BasicFPGAChip_pins();
+%translate([0,0,0.05]) Text_FPGA();
 *%translate([0,0,-slotBottom-chipTotalHeight/2]) BasicFPGAHousing_full();
