@@ -65,7 +65,8 @@ namespace fpgamod
 
     public static FPGADef Parse(string raw)
     {
-      if (string.IsNullOrWhiteSpace(raw)) {
+      if (string.IsNullOrWhiteSpace(raw))
+      {
         return NewEmpty();
       }
       var lines = raw.Split('\n');
@@ -161,9 +162,27 @@ namespace fpgamod
       }
     }
 
-    public bool HasConfig(byte address) {
+    public bool HasConfig(byte address)
+    {
       AssertValidAddress(address);
       return this._configIndex[address] != -1;
+    }
+
+    public int GetConfigLineCount()
+    {
+      return this._configLines.Count;
+    }
+
+    public Error GetConfigLineError(int index)
+    {
+      var cfg = this._configLines[index];
+      if (cfg.Error != null) {
+        return cfg.Error;
+      }
+      if (cfg.IsDuplicate) {
+        return Error.Duplicate;
+      }
+      return null;
     }
 
     public string GetLabel(byte address, bool nameFallback = true)
@@ -308,7 +327,6 @@ namespace fpgamod
       var cfg = new ConfigLine
       {
         RawDirty = true,
-        IsValid = true,
         HasValidAddress = true,
 
         AddressMode = ValueMode.Name,
@@ -421,7 +439,7 @@ namespace fpgamod
       public bool RawDirty;
 
       // error states
-      public bool IsValid;
+      public Error Error;
       public bool HasValidAddress; // if we have a valid address and are not a duplicate, we can at least use the label
       public bool IsDuplicate;
 
@@ -442,6 +460,8 @@ namespace fpgamod
       public string LutRawValue;
       public double LutValue;
 
+      public bool IsValid => this.Error == null || this.Error.IsWarning;
+
       public void ForceValid()
       {
         if (!this.HasValidAddress || this.IsDuplicate)
@@ -453,8 +473,8 @@ namespace fpgamod
           // nothing to do
           return;
         }
-        this.IsValid = true;
         this.RawDirty = true;
+        this.Error = null;
 
         if (IsIOAddress(this.Address))
         {
@@ -619,14 +639,14 @@ namespace fpgamod
         {
           if (!labelToAddress.TryGetValue(this.RawGateInput1, out this.GateInput1))
           {
-            this.IsValid = false;
+            this.Error = Error.UnknownLabel;
           }
         }
         if (info.Operands >= 2 && this.GateInput2Mode == ValueMode.Label)
         {
           if (!labelToAddress.TryGetValue(this.RawGateInput2, out this.GateInput2))
           {
-            this.IsValid = false;
+            this.Error = Error.UnknownLabel;
           }
         }
       }
@@ -636,7 +656,6 @@ namespace fpgamod
         var cfg = new ConfigLine
         {
           RawLine = line,
-          IsValid = true,
         };
 
         var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
@@ -652,7 +671,9 @@ namespace fpgamod
         var apart = labelSep == -1 ? fullApart : fullApart[..labelSep];
 
         cfg.HasValidAddress = ParseAddress(apart, out cfg.AddressMode, out cfg.Address);
-        cfg.IsValid = cfg.HasValidAddress;
+        if (!cfg.HasValidAddress) {
+          cfg.Error = Error.InvalidAddress;
+        }
         if (labelSep != -1)
         {
           cfg.Label = fullApart[(labelSep + 1)..];
@@ -669,7 +690,7 @@ namespace fpgamod
           if (parts.Length > 1)
           {
             // input only has label
-            cfg.IsValid = false;
+            cfg.Error = Error.TooManyValues;
           }
         }
         else if (IsGateAddress(cfg.Address))
@@ -677,7 +698,7 @@ namespace fpgamod
           // gate
           if (parts.Length < 2)
           {
-            cfg.IsValid = false;
+            cfg.Error = Error.MissingGateOp;
           }
           else
           {
@@ -695,17 +716,20 @@ namespace fpgamod
             {
               // full raw gate
               cfg.RawGate = true;
-              cfg.IsValid = uint.TryParse(cfg.RawGateOp[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var rawGateVal);
+              var rawValid = uint.TryParse(cfg.RawGateOp[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var rawGateVal);
+              if (!rawValid) {
+                cfg.Error = Error.InvalidRawGate;
+              }
               cfg.GateOp = (FPGAOp)(rawGateVal & 0xFF);
               cfg.GateInput1 = (byte)((rawGateVal >> 8) & 0xFF);
               cfg.GateInput2 = (byte)((rawGateVal >> 16) & 0xFF);
               if (cfg.GateOp >= FPGAOps.Count || !IsValidAddress(cfg.GateInput1) || !IsValidAddress(cfg.GateInput2) || (rawGateVal & 0xFFFFFF) != rawGateVal)
               {
-                cfg.IsValid = false;
+                cfg.Error = Error.InvalidRawGate;
               }
               if (parts.Length > 2)
               {
-                cfg.IsValid = false;
+                cfg.Error = Error.TooManyValues;
               }
             }
             else if (FPGAOps.SymbolToOp.TryGetValue(cfg.RawGateOp, out cfg.GateOp))
@@ -730,14 +754,15 @@ namespace fpgamod
                 }
               }
 
-              if (parts.Length != info.Operands + 2)
-              {
-                cfg.IsValid = false;
+              if (parts.Length < info.Operands + 2) {
+                cfg.Error = Error.MissingGateInput;
+              } else if (parts.Length > info.Operands + 2) {
+                cfg.Error = Error.TooManyValues;
               }
             }
             else
             {
-              cfg.IsValid = false;
+              cfg.Error = Error.InvalidGateOp;
             }
           }
         }
@@ -747,17 +772,21 @@ namespace fpgamod
           if (parts.Length >= 2)
           {
             cfg.LutRawValue = parts[1];
-            cfg.IsValid = double.TryParse(parts[1], out cfg.LutValue);
+            if (!double.TryParse(parts[1], out cfg.LutValue)) {
+              cfg.Error = Error.InvalidLutValue;
+            }
           }
-          if (parts.Length != 2)
+          if (parts.Length < 2)
           {
             // lut needs value
-            cfg.IsValid = false;
+            cfg.Error = Error.MissingLutValue;
+          } else if (parts.Length > 2) {
+            cfg.Error = Error.TooManyValues;
           }
         }
         else
         {
-          cfg.IsValid = false;
+          cfg.Error = Error.InvalidAddress;
         }
 
         return cfg;
@@ -797,6 +826,29 @@ namespace fpgamod
           mode = ValueMode.Decimal;
           return byte.TryParse(raw, out address);
         }
+      }
+    }
+
+    public class Error
+    {
+      public static Error Duplicate = new("Duplicate definition. Will be ignored", true);
+      public static Error UnknownLabel = new("Unknown label");
+      public static Error InvalidAddress = new("Invalid address");
+      public static Error TooManyValues = new("Too many values", true);
+      public static Error MissingGateOp = new("Missing gate op");
+      public static Error InvalidRawGate = new("Invalid raw gate");
+      public static Error MissingGateInput = new("Missing gate input");
+      public static Error InvalidGateOp = new("Invalid gate op");
+      public static Error InvalidLutValue = new("Invalid lookup table value");
+      public static Error MissingLutValue = new("Invalid lookup table value");
+
+      public readonly string Message;
+      public readonly bool IsWarning;
+
+      private Error(string message, bool warning = false)
+      {
+        this.Message = message;
+        this.IsWarning = warning;
       }
     }
   }

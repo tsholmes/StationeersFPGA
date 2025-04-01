@@ -35,6 +35,8 @@ namespace fpgamod
     private static Vector4[] _colors;
     private static Vector4[] _activeGridColors;
     private static uint _openBorderColor;
+    private static Vector4 _warnColor = new(0.7f, 0.7f, 0, 1);
+    private static Vector4 _errColor = new(1, 0, 0, 1);
 
     // editor state
     private static FPGAMotherboard Motherboard = null;
@@ -222,7 +224,7 @@ namespace fpgamod
             }
             if (ImGui.BeginTabItem("Raw"))
             {
-              ImGui.BeginChild("RawChild");
+              ImGui.BeginChild("RawChild", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
               DrawRawEditor();
               ImGui.EndChild();
               ImGui.EndTabItem();
@@ -699,11 +701,59 @@ namespace fpgamod
       {
         _rawDef = Def.GetRaw();
       }
+      var topLeft = ImGui.GetCursorScreenPos();
+      var lineHeight = ImGui.GetTextLineHeight();
+      var available = ImGui.GetContentRegionAvail();
+      var padding = ImGui.GetStyle().FramePadding;
+      const float gutterWidth = 20f;
 
+      ImGui.SetCursorScreenPos(topLeft + new Vector2(gutterWidth, 0));
+      unsafe
+      {
+        // capture raw editor scroll
+        ImGui.SetNextWindowSizeConstraints(Vector2.zero, Vector2.one * float.MaxValue, RawEditorCallback);
+      }
       if (ImGui.InputTextMultiline("##raw", ref _rawDef, 65536, Vector2.one * -float.Epsilon))
       {
         Def = FPGADef.Parse(_rawDef);
       }
+
+      ImGui.PushClipRect(topLeft, new Vector2(topLeft.x + gutterWidth, topLeft.y + available.y), true);
+      var cfgCount = Def.GetConfigLineCount();
+      for (var i = 0; i < cfgCount; i++)
+      {
+        var err = Def.GetConfigLineError(i);
+        if (err != null)
+        {
+          var color = err.IsWarning ? _warnColor : _errColor;
+          var text = err.IsWarning ? "*" : "x";
+          ImGui.PushID(i);
+          ImGui.SetCursorScreenPos(topLeft + new Vector2(0, lineHeight * i - _rawInputScroll));
+          ImGui.AlignTextToFramePadding();
+          ImGui.TextColored(color, text);
+          ImGui.PopID();
+        }
+      }
+      ImGui.PopClipRect();
+
+      if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RectOnly))
+      {
+        var lineNumber = (int)((ImGui.GetMousePos().y - topLeft.y - padding.y + _rawInputScroll) / lineHeight);
+        if (lineNumber >= 0 && lineNumber < cfgCount)
+        {
+          var err = Def.GetConfigLineError(lineNumber);
+          if (err != null)
+          {
+            ImGui.SetTooltip(err.Message);
+          }
+        }
+      }
+    }
+
+    private static float _rawInputScroll = 0f;
+    private static unsafe void RawEditorCallback(ImGuiSizeCallbackData* data)
+    {
+      _rawInputScroll = ImGui.GetScrollY();
     }
 
     private static void ItemTooltip(string text)
