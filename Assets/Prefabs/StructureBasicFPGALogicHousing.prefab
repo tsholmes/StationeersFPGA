@@ -384,7 +384,7 @@ MonoBehaviour:
   OpenEndsPermutation: 00000000010000000200000003000000
   OnOffButton: {fileID: 0}
   Input1Index: 0
-  OutputIndex: 1
+  OutputIndex: -1
 --- !u!1 &4650953802053928000
 GameObject:
   m_ObjectHideFlags: 0

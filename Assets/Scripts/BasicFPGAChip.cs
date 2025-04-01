@@ -198,7 +198,8 @@ namespace fpgamod
     public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
     {
       base.BuildUpdate(writer, networkUpdateType);
-      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType)) {
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
+      {
         writer.WriteAscii(this.GetSourceCode());
       }
     }
@@ -206,7 +207,8 @@ namespace fpgamod
     public override void ProcessUpdate(RocketBinaryReader reader, ushort networkUpdateType)
     {
       base.ProcessUpdate(reader, networkUpdateType);
-      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType)) {
+      if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
+      {
         this.SetSourceCode(new string(reader.ReadChars()));
       }
     }
@@ -250,5 +252,7 @@ namespace fpgamod
     {
       return AsciiString.Parse(this._def.GetRaw());
     }
+
+    public string GetInputLabel(int index) => this._def.GetLabel((byte)index);
   }
 }
