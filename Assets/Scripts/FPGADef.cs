@@ -150,7 +150,17 @@ namespace fpgamod
         this._configIndex[cfg.Address] = idx;
         if (!string.IsNullOrEmpty(cfg.Label))
         {
-          labelMap[cfg.Label] = cfg.Address;
+          if (labelMap.ContainsKey(cfg.Label))
+          {
+            if (cfg.Error == null)
+            {
+              cfg.Error = Error.DuplicateLabel;
+            }
+          }
+          else
+          {
+            labelMap[cfg.Label] = cfg.Address;
+          }
         }
       }
 
@@ -176,11 +186,13 @@ namespace fpgamod
     public Error GetConfigLineError(int index)
     {
       var cfg = this._configLines[index];
-      if (cfg.Error != null) {
+      if (cfg.Error != null)
+      {
         return cfg.Error;
       }
-      if (cfg.IsDuplicate) {
-        return Error.Duplicate;
+      if (cfg.IsDuplicate)
+      {
+        return Error.DuplicateAddress;
       }
       return null;
     }
@@ -474,7 +486,10 @@ namespace fpgamod
           return;
         }
         this.RawDirty = true;
-        this.Error = null;
+        if (!this.IsValid)
+        {
+          this.Error = null;
+        }
 
         if (IsIOAddress(this.Address))
         {
@@ -657,9 +672,14 @@ namespace fpgamod
         {
           RawLine = line,
         };
+        var hashIndex = line.IndexOf('#');
+        if (hashIndex == -1)
+        {
+          hashIndex = line.Length;
+        }
 
-        var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0 || parts[0].StartsWith("#"))
+        var parts = line[..hashIndex].Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
         {
           cfg.IsComment = true;
           return cfg;
@@ -671,7 +691,8 @@ namespace fpgamod
         var apart = labelSep == -1 ? fullApart : fullApart[..labelSep];
 
         cfg.HasValidAddress = ParseAddress(apart, out cfg.AddressMode, out cfg.Address);
-        if (!cfg.HasValidAddress) {
+        if (!cfg.HasValidAddress)
+        {
           cfg.Error = Error.InvalidAddress;
         }
         if (labelSep != -1)
@@ -717,7 +738,8 @@ namespace fpgamod
               // full raw gate
               cfg.RawGate = true;
               var rawValid = uint.TryParse(cfg.RawGateOp[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var rawGateVal);
-              if (!rawValid) {
+              if (!rawValid)
+              {
                 cfg.Error = Error.InvalidRawGate;
               }
               cfg.GateOp = (FPGAOp)(rawGateVal & 0xFF);
@@ -754,9 +776,12 @@ namespace fpgamod
                 }
               }
 
-              if (parts.Length < info.Operands + 2) {
+              if (parts.Length < info.Operands + 2)
+              {
                 cfg.Error = Error.MissingGateInput;
-              } else if (parts.Length > info.Operands + 2) {
+              }
+              else if (parts.Length > info.Operands + 2)
+              {
                 cfg.Error = Error.TooManyValues;
               }
             }
@@ -772,7 +797,8 @@ namespace fpgamod
           if (parts.Length >= 2)
           {
             cfg.LutRawValue = parts[1];
-            if (!double.TryParse(parts[1], out cfg.LutValue)) {
+            if (!double.TryParse(parts[1], out cfg.LutValue))
+            {
               cfg.Error = Error.InvalidLutValue;
             }
           }
@@ -780,7 +806,9 @@ namespace fpgamod
           {
             // lut needs value
             cfg.Error = Error.MissingLutValue;
-          } else if (parts.Length > 2) {
+          }
+          else if (parts.Length > 2)
+          {
             cfg.Error = Error.TooManyValues;
           }
         }
@@ -831,7 +859,8 @@ namespace fpgamod
 
     public class Error
     {
-      public static Error Duplicate = new("Duplicate definition. Will be ignored", true);
+      public static Error DuplicateAddress = new("Duplicate definition. Will be ignored", true);
+      public static Error DuplicateLabel = new("Duplicate label. Label refers to earliest definition", true);
       public static Error UnknownLabel = new("Unknown label");
       public static Error InvalidAddress = new("Invalid address");
       public static Error TooManyValues = new("Too many values", true);
@@ -840,7 +869,7 @@ namespace fpgamod
       public static Error MissingGateInput = new("Missing gate input");
       public static Error InvalidGateOp = new("Invalid gate op");
       public static Error InvalidLutValue = new("Invalid lookup table value");
-      public static Error MissingLutValue = new("Invalid lookup table value");
+      public static Error MissingLutValue = new("Missing lookup table value");
 
       public readonly string Message;
       public readonly bool IsWarning;
