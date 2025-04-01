@@ -59,7 +59,7 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAHousing_base/default").gameObject)
+      if (obj == this.transform.Find("BasicFPGAHousing_logicbase/default").gameObject)
       {
         return FPGAMod.UVTile(16, 0, 6); // match IC housing base
       }

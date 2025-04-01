@@ -3,7 +3,7 @@ use <BasicFPGAHousing_paintcap.scad>;
 use <PowerSymbol.scad>;
 use <DataSymbol.scad>;
 
-module BasiFPGAHousing_chipcutout() {
+module BasicFPGAHousing_chipcutout() {
   slotPinBaseOffset = (-slotPinEdgeCount-1)/2 * slotPinEdgeSpacing;
   slotPinEdgeOffset = slotSize/2 - slotPinSize/2 - slotPinEdgePad;
   union() {
@@ -37,13 +37,9 @@ module BasicFPGAHousing_base() {
     }
     translate([0,0,baseBottom])
       cube(size=[baseBackCutoutSize, baseBackCutoutSize, baseBackCutoutDepth*2], center=true);
-    BasiFPGAHousing_chipcutout();
-    cablecutout();
-    rotate([0,0,180]) cablecutout();
+    BasicFPGAHousing_chipcutout();
   }
 }
 
 BasicFPGAHousing_base();
 %BasicFPGAHousing_paintcap();
-%translate([0.067,0.25,-0.001]) rotate([-90, 0, 0]) PowerSymbol();
-%translate([0.073,-0.25,0.001]) rotate([90, 0, 0]) DataSymbol();

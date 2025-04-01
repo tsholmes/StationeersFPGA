@@ -471,6 +471,7 @@ MonoBehaviour:
   MaxQuantity: 5
   Constructables:
   - {fileID: 5650100839866074968, guid: 6e4d762c3e837e744a1cbeb4c2c75a4a, type: 3}
+  - {fileID: 2572274736297717317, guid: 63f37e62f25874c43af84e4a2cf9ffef, type: 3}
   ModelCopyPrefab: ItemKitLogicCircuit
   BaseLocalizedName: Kit (FPGA Housing)
   BaseLocalizedDescription: 
