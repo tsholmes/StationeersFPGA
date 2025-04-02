@@ -14,6 +14,7 @@ namespace fpgamod
     {
       extraTypes.Add(typeof(BasicFPGAChipSaveData));
       extraTypes.Add(typeof(FPGAMotherboardSaveData));
+      extraTypes.Add(typeof(BasicFPGAReaderHousingSaveData));
     }
   }
 }

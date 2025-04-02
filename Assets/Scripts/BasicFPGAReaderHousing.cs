@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Localization2;
+using Assets.Scripts.Networking;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
@@ -26,7 +27,6 @@ namespace fpgamod
     private Slot _FPGASlot => this.Slots[0];
     private BasicFPGAChip FPGAChip => this._FPGASlot.Get<BasicFPGAChip>();
 
-    // TODO: save and network updates
     public ILogicable[] Devices = new ILogicable[8];
     private long[] _DeviceIDs = new long[8];
 
@@ -92,6 +92,86 @@ namespace fpgamod
         Description = ""
         + "Holds a {THING:ItemBasicFPGAChip}. "
       };
+    }
+
+    public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
+    {
+      base.BuildUpdate(writer, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_DEVICES, networkUpdateType))
+      {
+        for (var i = 0; i < 8; i++)
+        {
+          writer.WriteInt64(this.Devices[i]?.ReferenceId ?? 0);
+        }
+      }
+    }
+
+    public override void ProcessUpdate(RocketBinaryReader reader, ushort networkUpdateType)
+    {
+      base.ProcessUpdate(reader, networkUpdateType);
+      if (Thing.IsNetworkUpdateRequired(FLAG_DEVICES, networkUpdateType))
+      {
+        for (var i = 0; i < 8; i++)
+        {
+          this.Devices[i] = Referencable.Find<ILogicable>(reader.ReadInt64());
+        }
+      }
+    }
+
+    public override void SerializeOnJoin(RocketBinaryWriter writer)
+    {
+      base.SerializeOnJoin(writer);
+      for (var i = 0; i < 8; i++)
+      {
+        writer.WriteInt64(this.Devices[i]?.ReferenceId ?? 0);
+      }
+    }
+
+    public override ThingSaveData SerializeSave()
+    {
+      var saveData = new BasicFPGAReaderHousingSaveData();
+      var baseData = saveData as ThingSaveData;
+      this.InitialiseSaveData(ref baseData);
+      return saveData;
+    }
+
+    public override void DeserializeSave(ThingSaveData baseData)
+    {
+      base.DeserializeSave(baseData);
+      if (baseData is not BasicFPGAReaderHousingSaveData saveData)
+      {
+        return;
+      }
+      if (saveData.DeviceIDs != null)
+      {
+        for (var i = 0; i < saveData.DeviceIDs.Length && i < 8; i++)
+        {
+          this._DeviceIDs[i] = saveData.DeviceIDs[i];
+        }
+      }
+    }
+
+    protected override void InitialiseSaveData(ref ThingSaveData baseData)
+    {
+      base.InitialiseSaveData(ref baseData);
+      if (baseData is not BasicFPGAReaderHousingSaveData saveData)
+      {
+        return;
+      }
+      saveData.DeviceIDs = new long[8];
+      for (var i = 0; i < 8; i++)
+      {
+        saveData.DeviceIDs[i] = this.Devices[i]?.ReferenceId ?? 0;
+      }
+    }
+
+    public override void OnFinishedLoad()
+    {
+      base.OnFinishedLoad();
+      for (var i = 0; i < 8; i++)
+      {
+        this.Devices[i] = Thing.Find<Device>(this._DeviceIDs[i]);
+      }
     }
 
     public double GetFPGAInputPin(int index)
@@ -174,7 +254,12 @@ namespace fpgamod
         {
           return action.Fail(GameStrings.RequiresScrewdriver);
         }
-        return Logicable._TryGetNextLogicDevice(interactable, interaction, ref this.Devices[index], this.InputNetwork1DevicesSorted, doAction, 255);
+        action = Logicable._TryGetNextLogicDevice(interactable, interaction, ref this.Devices[index], this.InputNetwork1DevicesSorted, doAction, 255);
+        if (doAction)
+        {
+          this.NetworkUpdateFlags |= FLAG_DEVICES;
+        }
+        return action;
       }
       return base.InteractWith(interactable, interaction, doAction);
     }
