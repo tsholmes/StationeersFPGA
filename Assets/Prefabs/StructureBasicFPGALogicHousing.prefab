@@ -194,7 +194,7 @@ MonoBehaviour:
   AudioSources: []
   BaseAnimator: {fileID: 0}
   IsCursor: 0
-  Blueprint: {fileID: 0}
+  Blueprint: {fileID: 2794976668801574333, guid: da2126c33af814a4785a26f9a7456e7b, type: 3}
   Wireframe: {fileID: 0}
   lodFlares: []
   IsCustomThing: 0

@@ -57,7 +57,9 @@ namespace fpgamod
     {
       if (thing.Blueprint != null)
       {
-        return; // don't overwrite if we get around to making manual blueprints
+        // don't overwrite existing blueprints, but generate the wireframe for our own
+        GenerateWireframe(thing.Blueprint, thing.Blueprint.transform);
+        return;
       }
 
       if (blueprintContainer == null)
@@ -69,22 +71,36 @@ namespace fpgamod
 
       var blueprint = new GameObject(thing.PrefabName);
       blueprint.transform.parent = blueprintContainer.transform;
-      var meshFilter = blueprint.AddComponent<MeshFilter>();
-      var meshRenderer = blueprint.AddComponent<MeshRenderer>();
-      var wireframe = blueprint.AddComponent<Wireframe>();
+      blueprint.AddComponent<MeshFilter>();
+      blueprint.AddComponent<MeshRenderer>();
+      blueprint.AddComponent<Wireframe>();
+
+      GenerateWireframe(blueprint, thing.transform);
+
+      thing.Blueprint = blueprint;
+    }
+
+    private static void GenerateWireframe(GameObject blueprint, Transform srcTransform)
+    {
+      var wireframe = blueprint.GetComponent<Wireframe>();
+      if (wireframe == null)
+      {
+        return;
+      }
+
+      var meshFilter = blueprint.GetComponent<MeshFilter>();
+      var meshRenderer = blueprint.GetComponent<MeshRenderer>();
 
       wireframe.BlueprintTransform = blueprint.transform;
       wireframe.BlueprintMeshFilter = meshFilter;
       wireframe.BlueprintRenderer = meshRenderer;
 
-      var gen = new WireframeGenerator(thing.transform);
+      var gen = new WireframeGenerator(srcTransform);
 
       meshFilter.mesh = gen.CombinedMesh;
       meshRenderer.materials = StationeersModsUtility.GetBlueprintMaterials(1);
       wireframe.WireframeEdges = gen.Edges;
       wireframe.ShowTransformArrow = false;
-
-      thing.Blueprint = blueprint;
     }
 
     private static Dictionary<string, StationeersColor> MATERIAL_MAP = new() {
