@@ -284,6 +284,7 @@ namespace fpgamod
           {
             Def = FPGADef.Parse(example.RawConfig);
             _rawDef = example.RawConfig;
+            AutoOpen();
           }
           if (!string.IsNullOrEmpty(example.Tooltip))
           {
