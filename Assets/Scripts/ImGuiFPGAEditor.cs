@@ -229,6 +229,13 @@ namespace fpgamod
               ImGui.EndChild();
               ImGui.EndTabItem();
             }
+            if (ImGui.BeginTabItem("Help"))
+            {
+              ImGui.BeginChild("HelpChild");
+              DrawHelp();
+              ImGui.EndChild();
+              ImGui.EndTabItem();
+            }
             ImGui.EndTabBar();
           }
 
@@ -755,6 +762,35 @@ namespace fpgamod
     private static unsafe void RawEditorCallback(ImGuiSizeCallbackData* data)
     {
       _rawInputScroll = ImGui.GetScrollY();
+    }
+
+    private static string[] _hexStrings = new string[(int)FPGAOps.Count];
+    private static string[] _countStrings = new string[] { "0", "1", "2" };
+    private static void DrawHelp()
+    {
+      if (ImGui.BeginTable("helpTable", 4))
+      {
+        ImGui.TableSetupColumn("Symbol");
+        ImGui.TableSetupColumn("Description");
+        ImGui.TableSetupColumn("Hex Value");
+        ImGui.TableSetupColumn("Input Count");
+        ImGui.TableHeadersRow();
+        for (FPGAOp op = (FPGAOp)1; op < FPGAOps.Count; op++)
+        {
+          var index = (int)op;
+          var info = FPGAOps.GetOpInfo(op);
+          if (_hexStrings[index] == null)
+          {
+            _hexStrings[index] = $"${index:X2}";
+          }
+          ImGui.TableNextRow();
+          ImGui.TableNextColumn(); ImGui.Selectable(info.Symbol, false, ImGuiSelectableFlags.SpanAllColumns);
+          ImGui.TableNextColumn(); ImGui.Text(info.Hint);
+          ImGui.TableNextColumn(); ImGui.Text(_hexStrings[index]);
+          ImGui.TableNextColumn(); ImGui.Text(_countStrings[info.Operands]);
+        }
+        ImGui.EndTable();
+      }
     }
 
     private static void ItemTooltip(string text)
