@@ -182,11 +182,11 @@ namespace fpgamod
       }
       if (this.Devices[index] == null)
       {
-        return double.NaN;
+        return 0;
       }
       if (!this.InputNetwork1.DeviceList.Contains(this))
       {
-        return double.NaN;
+        return 0;
       }
       return this.Devices[index].GetLogicValue(LogicType.Setting);
     }

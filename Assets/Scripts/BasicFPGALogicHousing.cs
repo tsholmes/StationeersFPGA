@@ -126,7 +126,7 @@ namespace fpgamod
       var addr = (byte)address;
       if (FPGADef.IsIOAddress(addr) && (!this.OnOff || !this.Powered)) {
         // we only require power for reading gate outputs. everything else is just configuration.
-        return double.NaN;
+        return 0;
       }
       return this.FPGAChip.ReadMemory(address);
     }

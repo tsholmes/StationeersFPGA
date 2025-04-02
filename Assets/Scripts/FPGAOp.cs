@@ -83,7 +83,7 @@ namespace fpgamod
     public static FPGAOpInfo InvalidOp = new FPGAOpInfo { Symbol = "invalid", Hint = "", ConstantOp = () => double.NaN };
     public static readonly Dictionary<FPGAOp, FPGAOpInfo> InfoDict = new()
     {
-      [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "", ConstantOp = () => double.NaN },
+      [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "", ConstantOp = () => 0 },
       [FPGAOp.Ceil] = new FPGAOpInfo { Symbol = "ceil", Hint = "round up", Operands = 1, UnaryOp = Math.Ceiling },
       [FPGAOp.Floor] = new FPGAOpInfo { Symbol = "floor", Hint = "round down", Operands = 1, UnaryOp = Math.Floor },
       [FPGAOp.Trunc] = new FPGAOpInfo { Symbol = "trunc", Hint = "truncate/ipart", Operands = 1, UnaryOp = Math.Truncate },
