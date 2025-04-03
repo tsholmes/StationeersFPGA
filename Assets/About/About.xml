@@ -8,6 +8,12 @@
     [b]WARNING:[/b] This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.
     See: https://jixxed.github.io/StationeersMods/
 
+    The FPGA mod lets you replace a big pile of logic devices with one configurable chip. Connect it with a few Logic Readers and Writers to automate your base, or access it with IC10 chips for fast reusable computation. The chips are easily configurable with the form or text based editors.
+
+    In contrast to IC10 chips, which execute instructions one at a time, FPGA chips run all configured gates simultaneously, allowing you to just change the inputs and immediately read the new outputs. This allows a single FPGA chip to calculate results multiple times per tick when accessed from one or even multiple IC10 chips.
+
+    [h2]New Items:[/h2]
+
     [h3]ItemFPGAChip[/h3]
     Simple FPGA-like chip with 64 input pins, 64 gates, and 64 lookup table values.
 
