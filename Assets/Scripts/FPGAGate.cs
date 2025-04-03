@@ -41,10 +41,12 @@ namespace fpgamod
       {
         inputGates[i] = new InputGate(i);
       }
+      var lut = new double[FPGADef.LutCount];
       var lutGates = new FPGAGate[FPGADef.LutCount];
       for (var i = 0; i < FPGADef.LutCount; i++)
       {
-        lutGates[i] = new ConstantGate(def.GetLutValue((byte)(i + FPGADef.LutOffset)));
+        lut[i] = def.GetLutValue((byte)(i + FPGADef.LutOffset));
+        lutGates[i] = new ConstantGate(lut[i]);
       }
       var errGate = new ConstantGate(double.NaN);
       Func<byte, FPGAGate> getGate = address =>
@@ -111,7 +113,7 @@ namespace fpgamod
           }
           gate1 = getGate(g1);
         }
-        gates[index] = MakeGate(op, gate0, gate1);
+        gates[index] = MakeGate(op, gate0, gate1, lut);
         building[index] = false;
         return false;
       }
@@ -122,8 +124,13 @@ namespace fpgamod
       }
     }
 
-    private static FPGAGate MakeGate(FPGAOp op, FPGAGate g0, FPGAGate g1)
+    private static FPGAGate MakeGate(FPGAOp op, FPGAGate g0, FPGAGate g1, double[] lut)
     {
+      // special handling for lookup
+      if (op == FPGAOp.Lookup)
+      {
+        return new LookupGate(g0, lut);
+      }
       var info = FPGAOps.GetOpInfo(op);
       switch (info.Operands)
       {
@@ -156,6 +163,27 @@ namespace fpgamod
       public override double Op(IFPGAInput input)
       {
         return input.GetFPGAInputPin(this.index);
+      }
+    }
+
+    private class LookupGate : FPGAGate
+    {
+      private readonly FPGAGate g0;
+      private readonly double[] lut;
+      public LookupGate(FPGAGate g0, double[] lut)
+      {
+        this.g0 = g0;
+        this.lut = lut;
+      }
+
+      public override double Op(IFPGAInput input)
+      {
+        var idx = ProgrammableChip.DoubleToLong(this.g0.Eval(input), true);
+        if (idx < 0 || idx >= this.lut.Length)
+        {
+          return double.NaN;
+        }
+        return this.lut[idx];
       }
     }
 

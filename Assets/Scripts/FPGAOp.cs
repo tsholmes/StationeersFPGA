@@ -13,6 +13,7 @@ namespace fpgamod
     None,
 
     // unary ops perform op on g0
+    Lookup,
     Ceil,
     Floor,
     Trunc,
@@ -84,6 +85,7 @@ namespace fpgamod
     public static readonly Dictionary<FPGAOp, FPGAOpInfo> InfoDict = new()
     {
       [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "", ConstantOp = () => 0 },
+      [FPGAOp.Lookup] = new FPGAOpInfo { Symbol = "@", Hint = "lookup table by index (0-63)", Operands = 1 },
       [FPGAOp.Ceil] = new FPGAOpInfo { Symbol = "ceil", Hint = "round up", Operands = 1, UnaryOp = Math.Ceiling },
       [FPGAOp.Floor] = new FPGAOpInfo { Symbol = "floor", Hint = "round down", Operands = 1, UnaryOp = Math.Floor },
       [FPGAOp.Trunc] = new FPGAOpInfo { Symbol = "trunc", Hint = "truncate/ipart", Operands = 1, UnaryOp = Math.Truncate },

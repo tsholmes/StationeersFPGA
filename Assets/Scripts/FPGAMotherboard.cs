@@ -179,7 +179,7 @@ namespace fpgamod
       if (this.IsSelectedIndexValid)
       {
         var chip = this.ConnectedFPGAHolders[this.SelectedHolderIndex].GetFPGAChip();
-        this.RawConfig = chip.RawConfig;
+        this.RawConfig = chip?.RawConfig ?? "";
       }
       else
       {
