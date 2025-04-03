@@ -47,7 +47,6 @@ namespace fpgamod
     public void PatchOnLoad()
     {
       this.SlotType = FPGASlotType;
-      this.Thumbnail = StationeersModsUtility.FindPrefab("ItemIntegratedCircuit10").Thumbnail;
 
       FPGAMod.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, "FPGAChip");
     }

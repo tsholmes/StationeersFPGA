@@ -37,9 +37,6 @@ namespace fpgamod
     {
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
       this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
-
-      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
-      this.Thumbnail = src.Thumbnail;
     }
 
 

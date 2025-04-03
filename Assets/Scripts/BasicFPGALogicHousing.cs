@@ -36,9 +36,6 @@ namespace fpgamod
       this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
 
       FPGAMod.AddLocalizationString("FallbackSlotsName", "FPGAChip", "FpgaChip");
-
-      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
-      this.Thumbnail = src.Thumbnail;
     }
 
     public override void OnPrefabLoad()
