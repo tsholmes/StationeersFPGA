@@ -73,7 +73,7 @@ $42=abs(in2) abs Input2Hex
 # the lowest byte is the op code, the next 2 bytes are the addresses of the input values
 # $[v1address][v0address][opcode]
 # raw op codes can be found on the help tab
-gate03=raw(in1/lut2) $820114 # op(/) = $14, in1=$01 lut2=$82
+gate03=raw(in1/lut2) $820115 # op(/) = $15, in1=$01 lut2=$82
 
 # warnings
 # any extra values on a line are ignored
