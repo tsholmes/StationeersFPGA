@@ -14,7 +14,7 @@
     [h3]ItemKitBasicFPGAHousing[/h3]
     Kit to construct housings to hold FPGA chips.
 
-    [h3]StructureBasicFPGAHousingLogic[/h3]
+    [h3]StructureBasicFPGALogicHousing[/h3]
     Chip housing that allows full access to all inputs/outputs of FPGA chip.
     Requires get/getd/put/putd instructions from IC10 chips.
 
@@ -34,7 +34,7 @@
 <b>WARNING:</b> <color=#ff0000>This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.</color>
 See: https://jixxed.github.io/StationeersMods/
 
-Adds a basic FPGA chip housing and motherboard, printable from electronics printer.
+Adds a basic FPGA chip, housings and editor motherboard, printable from electronics printer.
 ]]>
   </InGameDescription>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->

@@ -32,10 +32,6 @@ namespace fpgamod
             patchable.PatchOnLoad();
             doMatPatch = !patchable.SkipMaterialPatch();
           }
-          if (thing is ILocalizedPrefab localized)
-          {
-            FPGAMod.AddLocalizationThing(thing.PrefabHash, localized.GetLocalization());
-          }
           Blueprintify(thing);
           if (doMatPatch)
           {

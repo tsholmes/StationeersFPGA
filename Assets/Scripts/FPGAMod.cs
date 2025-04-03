@@ -7,7 +7,7 @@ using UnityEngine;
 using Assets.Scripts;
 using System.Reflection;
 using System.Collections.Generic;
-[StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.2.4657.21547.1")]
+[StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.1.0")]
 public class FPGAMod : ModBehaviour
 {
   [SerializeField]
@@ -82,23 +82,5 @@ public class FPGAMod : ModBehaviour
     paddedNamesField.SetValue(collection, paddedNames);
     var lengthField = collection.GetType().GetField($"<{nameof(collection.Length)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
     lengthField.SetValue(collection, origLength + 1);
-  }
-
-  public static void AddLocalizationString(string fieldName, string key, string value)
-  {
-    var field = typeof(Localization).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic);
-    var intKey = Animator.StringToHash(key);
-    var dict = field.GetValue(null) as Dictionary<int, string>;
-    dict[intKey] = value;
-  }
-
-  public static void AddLocalizationThing(int prefabHash, Localization.LocalizationThingDat localization)
-  {
-    if (localization == null) {
-      return;
-    }
-    var field = typeof(Localization).GetField("FallbackThingsLocalized", BindingFlags.Static | BindingFlags.NonPublic);
-    var dict = field.GetValue(null) as Dictionary<int, Localization.LocalizationThingDat>;
-    dict[prefabHash] = localization;
   }
 }

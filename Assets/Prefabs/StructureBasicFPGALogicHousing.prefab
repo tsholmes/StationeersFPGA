@@ -67,8 +67,8 @@ MonoBehaviour:
   PrefabHash: 648171679
   ThingTransform: {fileID: 4536182186354572226}
   Slots:
-  - StringKey: FPGAChip
-    StringHash: -174818816
+  - StringKey: SlotFPGAChip
+    StringHash: 2011898401
     Type: 0
     SpecificTypePrefabHash: -1
     NewType1: 0

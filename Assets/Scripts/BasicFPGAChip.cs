@@ -21,10 +21,10 @@ namespace fpgamod
     IMemoryWritable,
     IPatchOnLoad,
     ICustomUV,
-    ILocalizedPrefab,
     ISourceCode
   {
     public const Slot.Class FPGASlotType = (Slot.Class)0x69;
+    public const string FPGASlotTypeName = "FPGAChip";
 
     private const ushort FLAG_RAWCONFIG = 256;
 
@@ -48,7 +48,7 @@ namespace fpgamod
     {
       this.SlotType = FPGASlotType;
 
-      FPGAMod.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, "FPGAChip");
+      FPGAMod.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, FPGASlotTypeName);
     }
 
     public Vector2? GetUV(GameObject obj)
@@ -58,17 +58,6 @@ namespace fpgamod
         return FPGAMod.UVTile(64, 3, 7); // roughly match ic10 pins
       }
       return null;
-    }
-
-    public Localization.LocalizationThingDat GetLocalization()
-    {
-      return new Localization.LocalizationThingDat
-      {
-        PrefabName = "FPGA Chip",
-        Description = ""
-        + "The Field-Programmable Gate Array contains 64 configurable gates to automate calculations. "
-        + "The gates can be configured by the {THING:MotherboardFPGA}, or through logic when placed in a {THING:StructureBasicFPGALogicHousing}."
-      };
     }
 
     public override ThingSaveData SerializeSave()

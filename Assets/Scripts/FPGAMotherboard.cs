@@ -15,7 +15,6 @@ namespace fpgamod
   public class FPGAMotherboard :
     Motherboard,
     IPatchOnLoad,
-    ILocalizedPrefab,
     ISourceCode
   {
     public readonly List<IFPGAHolder> ConnectedFPGAHolders = new List<IFPGAHolder>();
@@ -63,16 +62,6 @@ namespace fpgamod
     }
 
     bool IPatchOnLoad.SkipMaterialPatch() => true;
-
-    public Localization.LocalizationThingDat GetLocalization()
-    {
-      return new Localization.LocalizationThingDat
-      {
-        PrefabName = "FPGA Editor Motherboard",
-        Description = ""
-        + "Allows editing a {THING:ItemBasicFPGAChip} placed in a {THING:StructureBasicFPGALogicHousing} on a connected data network."
-      };
-    }
 
     public override ThingSaveData SerializeSave()
     {

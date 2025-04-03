@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Language xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>English</Name>
+  <Code>EN</Code>
+  <Font>font_english</Font>
+  <Things>
+    <RecordThing>
+      <Key>ItemBasicFPGAChip</Key>
+      <Value>FPGA Chip</Value>
+      <Description>The Field-Programmable Gate Array contains 64 configurable gates to automate calculations. The gates can be configured by the {THING:MotherboardFPGA}, or through logic when placed in a {THING:StructureBasicFPGALogicHousing}.</Description>
+    </RecordThing>
+    <RecordThing>
+      <Key>StructureBasicFPGALogicHousing</Key>
+      <Value>FPGA Logic Housing</Value>
+      <Description>Holds a {THING:ItemBasicFPGAChip} to be accessed by {THING:ItemIntegratedCircuit10}. The chip is memory-mapped allowing read/write access to both configuration and calculations via IC10 get/getd/put/putd instructions.
+- Writing to addresses 0-63 sets input values
+- Reading from addresses 0-63 reads gate calculation results
+- Reading/Writing addresses 64-127 accesses raw gate configuration values (address 64 accesses configuration for gate00). Check the help tab and raw config example on the {THING:MotherboardFPGA} for raw gate format information.
+- Reading/Writing address 128-191 accesses lookup table values (address 128 accesses lut00)
+The gate calculations happen continuously, so inputs can be written to and results read multiple times within a logic tick. Input values are volatile and should always be written to on the same tick as gate outputs are read.</Description>
+    </RecordThing>
+    <RecordThing>
+      <Key>StructureBasicFPGAReaderHousing</Key>
+      <Value>FPGA Reader Housing</Value>
+      <Description>Connects data network devices to the inputs of a {THING:ItemBasicFPGAChip}.
+Up to 8 devices can be configured to connect their {LOGICTYPE:Setting} value to the first 8 FPGA inputs (in00-in07). If a logic value other than {LOGICTYPE:Setting} is needed, use a {THING:StructureLogicReader}.
+The result of the first gate (gate00) is available to be read as the {LOGICTYPE:Setting} value of the housing. This allows the housing to be used directly as the input to a {THING:StructureLogicWriter}.
+The results of the first 8 gates (gate00-gate07) are available to be read as the Channel values of the housing ({LOGICTYPE:Channel0}-{LOGICTYPE:Channel7}). These can be retrieved using a {THING:StructureLogicReader} to then forward to other logic devices.
+Like other logic devices, the processing for this device happens once per tick. Changing input values multiple times within a tick (via {THING:ItemIntegratedCircuit10}) will not allow different output values to be read.</Description>
+    </RecordThing>
+    <RecordThing>
+      <Key>MotherboardFPGA</Key>
+      <Value>FPGA Editor Motherboard</Value>
+      <Description>Provides a form and text editor for configurating a {THING:ItemBasicFPGAChip}. Configurations can be imported from and exported to chips slotted in a {THING:StructureBasicFPGALogicHousing} or {THING:StructureBasicFPGAReaderHousing} on a connected data network.</Description>
+    </RecordThing>
+    <RecordThing>
+      <Key>ItemKitBasicFPGAHousing</Key>
+      <Value>Kit (FPGA Housing)</Value>
+      <Description></Description>
+    </RecordThing>
+  </Things>
+  <Slots>
+    <Record>
+      <Key>SlotFPGAChip</Key>
+      <Value>FPGA Chip</Value>
+    </Record>
+  </Slots>
+</Language>

@@ -19,7 +19,6 @@ namespace fpgamod
     IFPGAInput,
     IPatchOnLoad,
     ICustomUV,
-    ILocalizedPrefab,
     IFPGAHolder
   {
     private const ushort FLAG_DEVICES = 512;
@@ -79,24 +78,6 @@ namespace fpgamod
         return FPGAMod.UVTile(64, 3, 7);
       }
       return null;
-    }
-
-    public Localization.LocalizationThingDat GetLocalization()
-    {
-      return new Localization.LocalizationThingDat
-      {
-        PrefabName = "FPGA Reader Housing",
-        Description = ""
-        + "Connects data network devices to the inputs of a {THING:ItemBasicFPGAChip}.\n"
-        + "Up to 8 devices can be configured to connect their {LOGICTYPE:Setting} value to the first 8 FPGA inputs (in00-in07). "
-        + "If a logic value other than {LOGICTYPE:Setting} is needed, use a {THING:StructureLogicReader}.\n"
-        + "The result of the first gate (gate00) is available to be read as the {LOGICTYPE:Setting} value of the housing. "
-        + "This allows the housing to be used directly as the input to a {THING:StructureLogicWriter}.\n"
-        + "The results of the first 8 gates (gate00-gate07) are available to be read as the Channel values of the housing ({LOGICTYPE:Channel0}-{LOGICTYPE:Channel7}). "
-        + "These can be retrieved using a {THING:StructureLogicReader} to then forward to other logic devices.\n"
-        + "Like other logic devices, the processing for this device happens once per tick. "
-        + "Changing input values multiple times within a tick (e.g. via {THING:ItemIntegratedCircuit10}) will not allow different output values to be read."
-      };
     }
 
     public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)

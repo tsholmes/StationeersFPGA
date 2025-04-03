@@ -8,18 +8,10 @@ namespace fpgamod
 {
   public class MultiConstructor :
   Assets.Scripts.Objects.MultiConstructor,
-  IPatchOnLoad,
-  ILocalizedPrefab
+  IPatchOnLoad
   {
     [SerializeField]
     public string ModelCopyPrefab;
-
-    [SerializeField]
-    public string BaseLocalizedName;
-
-    [SerializeField]
-    [Multiline]
-    public string BaseLocalizedDescription;
 
     public void PatchOnLoad()
     {
@@ -46,18 +38,5 @@ namespace fpgamod
     }
 
     bool IPatchOnLoad.SkipMaterialPatch() => this.ModelCopyPrefab != "";
-
-    public Localization.LocalizationThingDat GetLocalization()
-    {
-      if (string.IsNullOrEmpty(this.BaseLocalizedName) && string.IsNullOrEmpty(this.BaseLocalizedDescription))
-      {
-        return null;
-      }
-      return new Localization.LocalizationThingDat
-      {
-        PrefabName = BaseLocalizedName ?? this.PrefabName,
-        Description = BaseLocalizedDescription ?? ""
-      };
-    }
   }
 }
