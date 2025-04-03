@@ -169,6 +169,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3103203340515703287}
   - component: {fileID: 2572274736297717317}
+  - component: {fileID: 2575469148489447582}
   m_Layer: 0
   m_Name: StructureFPGAReaderHousing
   m_TagString: Untagged
@@ -688,6 +689,27 @@ MonoBehaviour:
   OnOffButton: {fileID: 0}
   Input1Index: 0
   OutputIndex: 1
+--- !u!65 &2575469148489447582
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202014787164546789}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.5, y: 0.5, z: 0.095}
+  m_Center: {x: 0, y: 0, z: 0.0025}
 --- !u!1 &1361475110760799832
 GameObject:
   m_ObjectHideFlags: 0
@@ -788,7 +810,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -841,7 +863,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1000,7 +1022,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1213,10 +1235,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 82ec14e9166fd4542af7ff49a9d3b7ce, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: ff675b77390bcab4cacbdc340c8930f2, type: 2}
     - target: {fileID: 919132149155446097, guid: 82ec14e9166fd4542af7ff49a9d3b7ce, type: 3}
       propertyPath: m_Name
       value: FPGAHousing_readerscrews
@@ -1279,10 +1297,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 532b6af395ea432479975f0325632fac, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2a70743e0408b4480ea9ebfb4fea97, type: 2}
     - target: {fileID: 919132149155446097, guid: 532b6af395ea432479975f0325632fac, type: 3}
       propertyPath: m_Name
       value: Text_FPGAREADER
@@ -1345,10 +1359,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 807791ca5981e334a867787744ef7b51, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: c65db0bc16aaf2f4f8a6a271d04c920e, type: 2}
     - target: {fileID: 919132149155446097, guid: 807791ca5981e334a867787744ef7b51, type: 3}
       propertyPath: m_Name
       value: DataInSymbol
@@ -1411,10 +1421,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 81a6ef3281dcbf844b2b2c0141ba7aca, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: fc2a70743e0408b4480ea9ebfb4fea97, type: 2}
     - target: {fileID: 919132149155446097, guid: 81a6ef3281dcbf844b2b2c0141ba7aca, type: 3}
       propertyPath: m_Name
       value: FPGAHousing_pins
@@ -1477,10 +1483,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 845108767ae383640a49bbfad3922748, type: 2}
     - target: {fileID: 919132149155446097, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
       propertyPath: m_Name
       value: FPGAHousing_readerbase
@@ -1488,37 +1490,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3064415760405941090}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
---- !u!1 &5071653374451150944 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
-  m_PrefabInstance: {fileID: 5378221606925454641}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &3064415760405941090
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5071653374451150944}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.5, y: 0.5, z: 0.095}
-  m_Center: {x: 0, y: 0, z: 0.0025}
 --- !u!4 &5560240691367520986 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2bf9f151a57d2ac4badc8e366f82018f, type: 3}
@@ -1572,10 +1545,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 06954699230c6b74bac963dc561c4db6, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 93ead3aa7d75b20459e1ac10c79da15e, type: 2}
     - target: {fileID: 919132149155446097, guid: 06954699230c6b74bac963dc561c4db6, type: 3}
       propertyPath: m_Name
       value: PowerSymbol
@@ -1638,10 +1607,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 0aa3e7bf0a7f56e4186ca4babb3dd8fa, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 845108767ae383640a49bbfad3922748, type: 2}
     - target: {fileID: 919132149155446097, guid: 0aa3e7bf0a7f56e4186ca4babb3dd8fa, type: 3}
       propertyPath: m_Name
       value: FPGAHousing_paintcap
@@ -1704,10 +1669,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: -7635826562936255635, guid: 807791ca5981e334a867787744ef7b51, type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: c65db0bc16aaf2f4f8a6a271d04c920e, type: 2}
     - target: {fileID: 919132149155446097, guid: 807791ca5981e334a867787744ef7b51, type: 3}
       propertyPath: m_Name
       value: DataOutSymbol
