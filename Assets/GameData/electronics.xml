@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <ElectronicsPrinterRecipes>
+        <RecipeData>
+            <PrefabName>ItemBasicFPGAChip</PrefabName>
+            <Recipe>
+                <Time>40</Time>
+                <Energy>4000</Energy>
+                <Gold>10</Gold>
+                <Steel>4</Steel>
+                <Electrum>5</Electrum>
+                <Solder>2</Solder>
+            </Recipe>
+        </RecipeData>
+        <RecipeData>
+            <PrefabName>ItemKitBasicFPGAHousing</PrefabName>
+            <Recipe>
+                <Time>40</Time>
+                <Energy>2000</Energy>
+                <Copper>10</Copper>
+                <Steel>4</Steel>
+                <Solder>2</Solder>
+            </Recipe>
+        </RecipeData>
+        <RecipeData>
+            <PrefabName>MotherboardFPGA</PrefabName>
+            <Recipe>
+                <Time>5</Time>
+                <Energy>500</Energy>
+                <Copper>5</Copper>
+                <Gold>5</Gold>
+            </Recipe>
+        </RecipeData>
+    </ElectronicsPrinterRecipes>
+</GameData>

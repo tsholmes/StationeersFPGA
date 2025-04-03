@@ -173,7 +173,7 @@ MonoBehaviour:
   EmissionColor: {r: 1, g: 1, b: 1, a: 1}
   DiffuseIndex: 0
   SmoothnessIndex: 0
-  SortingClass: 0
+  SortingClass: 1
   RecipeTier: 1
   CollisionSound: 0
   SlotWearAction: 0
