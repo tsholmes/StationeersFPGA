@@ -1,25 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>FPGAMod [StationeersMods]</Name>
-  <Author>Example</Author>
-  <Version>0.2.5116.23239.1</Version>
+  <Name>FPGA [StationeersMods]</Name>
+  <Author>tom_is_unlucky</Author>
+  <Version>0.1.0</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
-  <Description>[h1]FPGAMod[/h1]
+  <Description>[h1]FPGA[/h1]
     [b]WARNING:[/b] This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.
     See: https://jixxed.github.io/StationeersMods/
-    Description for FPGAMod
+
+    [h3]ItemBasicFPGAChip[/h3]
+    Simple FPGA-like chip with 64 input pins, 64 gates, and 64 lookup table values.
+
+    [h3]ItemKitBasicFPGAHousing[/h3]
+    Kit to construct housings to hold FPGA chips.
+
+    [h3]StructureBasicFPGAHousingLogic[/h3]
+    Chip housing that allows full access to all inputs/outputs of FPGA chip.
+    Requires get/getd/put/putd instructions from IC10 chips.
+
+    [h3]StructureBasicFPGAReaderHousing[/h3]
+    Chip housing that allows connecting first 8 inputs to data network devices and outputs first 8 gate values as logic values.
+    Can be connected to logic devices to automate calculations without IC10.
+
+    [h3]MotherboardFPGA[/h3]
+    Motherboard that provides a form and text editor for FPGA configuration.
+    Use a computer (not laptop) to import/export to FPGA chips in housings.
+
+    Check the stationpedia pages and editor motherboard for more details.
   </Description>
   <!-- Ingame Description using TMP tags for Workshop menu -->
   <InGameDescription>
     <![CDATA[<size="30"><color=#ffa500> FPGAMod </color></size>
 <b>WARNING:</b> <color=#ff0000>This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.</color>
 See: https://jixxed.github.io/StationeersMods/
-Description for FPGAMod
+
+Adds a basic FPGA chip housing and motherboard, printable from electronics printer.
 ]]>
   </InGameDescription>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->
   <ChangeLog>
-    [h3]Version 0.2.5116.23239.1:[/h3]
+    [h3]Version 0.1.0:[/h3]
     [list]
     [*]Initial release
     [/list]
