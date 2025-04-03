@@ -1,5 +1,5 @@
 include <FPGA_shared.scad>;
-use <BasicFPGAChip_base.scad>;
+use <FPGAChip_base.scad>;
 
 module FPGAPin() {
   pinTop = chipTotalHeight/2 - chipBaseHeight/2 + pinHorizHeight/2;
@@ -36,7 +36,7 @@ module FPGAPin() {
   }
 }
 
-module BasicFPGAChip_pins() {
+module FPGAChip_pins() {
   for (edge=[0:3])
     for (off=[1:slotPinEdgeCount])
       rotate([0,0,90*edge])
@@ -44,5 +44,5 @@ module BasicFPGAChip_pins() {
         FPGAPin();
 }
 
-BasicFPGAChip_pins();
-%BasicFPGAChip_base();
+FPGAChip_pins();
+%FPGAChip_base();

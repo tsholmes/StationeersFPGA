@@ -7,6 +7,6 @@ namespace fpgamod
 {
   public interface IFPGAHolder : ILogicable
   {
-    public BasicFPGAChip GetFPGAChip();
+    public FPGAChip GetFPGAChip();
   }
 }

@@ -14,7 +14,7 @@ using Assets.Scripts.Networking;
 
 namespace fpgamod
 {
-  public class BasicFPGAChip :
+  public class FPGAChip :
     Item,
     IMemory,
     IMemoryReadable,
@@ -53,7 +53,7 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAChip_pins/default").gameObject)
+      if (obj == this.transform.Find("FPGAChip_pins/default").gameObject)
       {
         return FPGAMod.UVTile(64, 3, 7); // roughly match ic10 pins
       }
@@ -62,7 +62,7 @@ namespace fpgamod
 
     public override ThingSaveData SerializeSave()
     {
-      var saveData = new BasicFPGAChipSaveData();
+      var saveData = new FPGAChipSaveData();
       var baseData = saveData as ThingSaveData;
       this.InitialiseSaveData(ref baseData);
       return saveData;
@@ -71,13 +71,13 @@ namespace fpgamod
     public override void DeserializeSave(ThingSaveData saveData)
     {
       base.DeserializeSave(saveData);
-      this.RawConfig = (saveData as BasicFPGAChipSaveData)?.RawConfig;
+      this.RawConfig = (saveData as FPGAChipSaveData)?.RawConfig;
     }
 
     protected override void InitialiseSaveData(ref ThingSaveData savedData)
     {
       base.InitialiseSaveData(ref savedData);
-      if (savedData is BasicFPGAChipSaveData fpgaData)
+      if (savedData is FPGAChipSaveData fpgaData)
       {
         fpgaData.RawConfig = this.RawConfig;
       }

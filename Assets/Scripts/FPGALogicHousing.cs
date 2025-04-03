@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace fpgamod
 {
-  public class BasicFPGALogicHousing :
+  public class FPGALogicHousing :
     LogicUnitBase,
     IMemory,
     IMemoryReadable,
@@ -27,12 +27,12 @@ namespace fpgamod
     private long _inputModCount = 0;
 
     private Slot _FPGASlot => this.Slots[0];
-    private BasicFPGAChip FPGAChip => this._FPGASlot.Get<BasicFPGAChip>();
+    private FPGAChip FPGAChip => this._FPGASlot.Get<FPGAChip>();
 
     public void PatchOnLoad()
     {
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
-      this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
+      this._FPGASlot.Type = FPGAChip.FPGASlotType;
     }
 
     public override void OnPrefabLoad()
@@ -53,7 +53,7 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAHousing_logicbase/default").gameObject)
+      if (obj == this.transform.Find("FPGAHousing_logicbase/default").gameObject)
       {
         return FPGAMod.UVTile(16, 0, 6); // match IC housing base
       }
@@ -65,7 +65,7 @@ namespace fpgamod
       {
         return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
       }
-      if (obj == this.transform.Find("BasicFPGAHousing_pins/default").gameObject) {
+      if (obj == this.transform.Find("FPGAHousing_pins/default").gameObject) {
         return FPGAMod.UVTile(64, 3, 7);
       }
       return null;
@@ -145,7 +145,7 @@ namespace fpgamod
       return this._inputModCount;
     }
 
-    public BasicFPGAChip GetFPGAChip()
+    public FPGAChip GetFPGAChip()
     {
       return this.FPGAChip;
     }

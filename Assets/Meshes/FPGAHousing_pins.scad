@@ -1,8 +1,8 @@
 include <FPGA_shared.scad>;
-use <BasicFPGAHousing_base.scad>;
-use <BasicFPGAHousing_paintcap.scad>;
+use <FPGAHousing_base.scad>;
+use <FPGAHousing_paintcap.scad>;
 
-module BasicFPGAHousing_pins() {
+module FPGAHousing_pins() {
   pinStartOffset = -(decoPinCount+1)/2 * decoPinSpacing;
   bevelSize = decoPinBevelSize * sqrt(2);
 
@@ -18,6 +18,6 @@ module BasicFPGAHousing_pins() {
   }
 }
 
-BasicFPGAHousing_pins();
-%BasicFPGAHousing_base();
-%BasicFPGAHousing_paintcap();
+FPGAHousing_pins();
+%FPGAHousing_base();
+%FPGAHousing_paintcap();

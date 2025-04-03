@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace fpgamod
 {
-  [XmlInclude(typeof(BasicFPGAChipSaveData))]
-  public class BasicFPGAChipSaveData : DynamicThingSaveData
+  [XmlInclude(typeof(FPGAChipSaveData))]
+  public class FPGAChipSaveData : DynamicThingSaveData
   {
     [XmlElement]
     public string RawConfig;

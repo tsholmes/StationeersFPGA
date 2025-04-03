@@ -6,8 +6,8 @@ using UnityEngine;
 
 namespace fpgamod
 {
-  [XmlInclude(typeof(BasicFPGAReaderHousingSaveData))]
-  public class BasicFPGAReaderHousingSaveData : LogicBaseSaveData
+  [XmlInclude(typeof(FPGAReaderHousingSaveData))]
+  public class FPGAReaderHousingSaveData : LogicBaseSaveData
   {
     [XmlElement]
     public long[] DeviceIDs;

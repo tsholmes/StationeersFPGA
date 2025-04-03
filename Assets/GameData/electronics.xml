@@ -2,7 +2,7 @@
 <GameData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <ElectronicsPrinterRecipes>
         <RecipeData>
-            <PrefabName>ItemBasicFPGAChip</PrefabName>
+            <PrefabName>ItemFPGAChip</PrefabName>
             <Recipe>
                 <Time>40</Time>
                 <Energy>4000</Energy>
@@ -13,7 +13,7 @@
             </Recipe>
         </RecipeData>
         <RecipeData>
-            <PrefabName>ItemKitBasicFPGAHousing</PrefabName>
+            <PrefabName>ItemKitFPGAHousing</PrefabName>
             <Recipe>
                 <Time>40</Time>
                 <Energy>2000</Energy>

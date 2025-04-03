@@ -19,8 +19,8 @@ namespace fpgamod
         return;
       }
       for (var i = 0; i < prefab.Slots.Count; i++) {
-        if (prefab.Slots[i].Type == BasicFPGAChip.FPGASlotType) {
-          page.SlotInserts[i].SlotType = BasicFPGAChip.FPGASlotTypeName;
+        if (prefab.Slots[i].Type == FPGAChip.FPGASlotType) {
+          page.SlotInserts[i].SlotType = FPGAChip.FPGASlotTypeName;
         }
       }
     }
@@ -30,14 +30,14 @@ namespace fpgamod
     static void SlotPopulateSlotTypeSprites() {
       var field = typeof(Slot).GetField("_slotTypeLookup", BindingFlags.Static | BindingFlags.NonPublic);
       var lookup = field.GetValue(null) as Dictionary<int, Sprite>;
-      lookup[(int)BasicFPGAChip.FPGASlotType] = lookup[(int)Slot.Class.ProgrammableChip];
+      lookup[(int)FPGAChip.FPGASlotType] = lookup[(int)Slot.Class.ProgrammableChip];
     }
 
     [HarmonyPatch(typeof(Localization), nameof(Localization.GetSlotName))]
     [HarmonyPrefix]
     static bool LocalizationGetSlotName(ref string __result, string slotName) {
       // skip builtin lookup for FPGAChip slot since slot type localizations get overridden
-      if (slotName == BasicFPGAChip.FPGASlotTypeName) {
+      if (slotName == FPGAChip.FPGASlotTypeName) {
         __result = slotName;
         return false;
       }

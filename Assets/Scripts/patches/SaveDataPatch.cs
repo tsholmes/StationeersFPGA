@@ -12,9 +12,9 @@ namespace fpgamod
     [HarmonyPatch(typeof(XmlSaveLoad), nameof(XmlSaveLoad.AddExtraTypes))]
     public static void Prefix(ref List<System.Type> extraTypes)
     {
-      extraTypes.Add(typeof(BasicFPGAChipSaveData));
+      extraTypes.Add(typeof(FPGAChipSaveData));
       extraTypes.Add(typeof(FPGAMotherboardSaveData));
-      extraTypes.Add(typeof(BasicFPGAReaderHousingSaveData));
+      extraTypes.Add(typeof(FPGAReaderHousingSaveData));
     }
   }
 }

@@ -1,9 +1,9 @@
 include <FPGA_shared.scad>;
-use <BasicFPGAHousing_full.scad>;
-use <BasicFPGAChip_pins.scad>;
+use <FPGAHousing_logicfull.scad>;
+use <FPGAChip_pins.scad>;
 use <Text_FPGA.scad>;
 
-module BasicFPGAChip_base() {
+module FPGAChip_base() {
   bevelHeight = (chipBaseHeight - pinHorizHeight)/2;
   bevelAngle = atan2(chipBaseBevelSize, bevelHeight);
   translate([0, 0, chipTotalHeight/2 - chipBaseHeight/2]) difference() {
@@ -19,7 +19,7 @@ module BasicFPGAChip_base() {
   }
 }
 
-BasicFPGAChip_base();
-%BasicFPGAChip_pins();
+FPGAChip_base();
+%FPGAChip_pins();
 %translate([0,0,0.05]) Text_FPGA();
-*%translate([0,0,-slotBottom-chipTotalHeight/2]) BasicFPGAHousing_full();
+*%translate([0,0,-slotBottom-chipTotalHeight/2]) FPGAHousing_logicfull();

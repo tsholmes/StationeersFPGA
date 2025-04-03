@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace fpgamod
 {
-  public class BasicFPGAReaderHousing :
+  public class FPGAReaderHousing :
     LogicUnitBase,
     IFPGAInput,
     IPatchOnLoad,
@@ -24,7 +24,7 @@ namespace fpgamod
     private const ushort FLAG_DEVICES = 512;
 
     private Slot _FPGASlot => this.Slots[0];
-    private BasicFPGAChip FPGAChip => this._FPGASlot.Get<BasicFPGAChip>();
+    private FPGAChip FPGAChip => this._FPGASlot.Get<FPGAChip>();
 
     public ILogicable[] Devices = new ILogicable[8];
     private long[] _DeviceIDs = new long[8];
@@ -35,7 +35,7 @@ namespace fpgamod
     public void PatchOnLoad()
     {
       this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
-      this._FPGASlot.Type = BasicFPGAChip.FPGASlotType;
+      this._FPGASlot.Type = FPGAChip.FPGASlotType;
     }
 
 
@@ -57,7 +57,7 @@ namespace fpgamod
 
     public Vector2? GetUV(GameObject obj)
     {
-      if (obj == this.transform.Find("BasicFPGAHousing_readerbase/default").gameObject)
+      if (obj == this.transform.Find("FPGAHousing_readerbase/default").gameObject)
       {
         return FPGAMod.UVTile(16, 0, 6); // match IC housing base
       }
@@ -73,7 +73,7 @@ namespace fpgamod
       {
         return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
       }
-      if (obj == this.transform.Find("BasicFPGAHousing_pins/default").gameObject)
+      if (obj == this.transform.Find("FPGAHousing_pins/default").gameObject)
       {
         return FPGAMod.UVTile(64, 3, 7);
       }
@@ -115,7 +115,7 @@ namespace fpgamod
 
     public override ThingSaveData SerializeSave()
     {
-      var saveData = new BasicFPGAReaderHousingSaveData();
+      var saveData = new FPGAReaderHousingSaveData();
       var baseData = saveData as ThingSaveData;
       this.InitialiseSaveData(ref baseData);
       return saveData;
@@ -124,7 +124,7 @@ namespace fpgamod
     public override void DeserializeSave(ThingSaveData baseData)
     {
       base.DeserializeSave(baseData);
-      if (baseData is not BasicFPGAReaderHousingSaveData saveData)
+      if (baseData is not FPGAReaderHousingSaveData saveData)
       {
         return;
       }
@@ -140,7 +140,7 @@ namespace fpgamod
     protected override void InitialiseSaveData(ref ThingSaveData baseData)
     {
       base.InitialiseSaveData(ref baseData);
-      if (baseData is not BasicFPGAReaderHousingSaveData saveData)
+      if (baseData is not FPGAReaderHousingSaveData saveData)
       {
         return;
       }
@@ -182,7 +182,7 @@ namespace fpgamod
       return this._modCount;
     }
 
-    public BasicFPGAChip GetFPGAChip()
+    public FPGAChip GetFPGAChip()
     {
       return this.FPGAChip;
     }

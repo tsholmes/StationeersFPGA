@@ -8,17 +8,17 @@
     [b]WARNING:[/b] This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.
     See: https://jixxed.github.io/StationeersMods/
 
-    [h3]ItemBasicFPGAChip[/h3]
+    [h3]ItemFPGAChip[/h3]
     Simple FPGA-like chip with 64 input pins, 64 gates, and 64 lookup table values.
 
-    [h3]ItemKitBasicFPGAHousing[/h3]
+    [h3]ItemKitFPGAHousing[/h3]
     Kit to construct housings to hold FPGA chips.
 
-    [h3]StructureBasicFPGALogicHousing[/h3]
+    [h3]StructureFPGALogicHousing[/h3]
     Chip housing that allows full access to all inputs/outputs of FPGA chip.
     Requires get/getd/put/putd instructions from IC10 chips.
 
-    [h3]StructureBasicFPGAReaderHousing[/h3]
+    [h3]StructureFPGAReaderHousing[/h3]
     Chip housing that allows connecting first 8 inputs to data network devices and outputs first 8 gate values as logic values.
     Can be connected to logic devices to automate calculations without IC10.
 
