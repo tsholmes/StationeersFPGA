@@ -1,18 +1,7 @@
-Run the init script first
+# Stationeers FPGA Mod
 
-init.bat for Windows
+![header image](Assets/About/Preview.png)
 
-init.sh for Linux
+This mod requires [StationeersMods](https://jixxed.github.io/StationeersMods/) to be installed in order to use.
 
-This will pre-initialize the project files with your own mod name and namespace.
-
-Keep the mod naming to values like: ExampleMod, TimeDateMod, etc. following Class name conventions.
-https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-classes-structs-and-interfaces
-
-Keep the namespace to values like: Creator.Example, Jixxed.TimeDate, etc. following namespace conventions.
-https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-namespaces
-
-A unique namespace prevent conflicts with other mods and the game itself.
-
-After that follow instructions here:
-https://github.com/jixxed/StationeersMods/blob/main/doc/CREATE-MOD-UNITY.md
+Adds a simple FPGA-like chip to [Stationeers](https://store.steampowered.com/app/544550/Stationeers/). Subscribe on the [workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3457324551) to use in game. Detailed descriptions of functionality is available in-game on Stationpedia and in the FPGA Editor.
