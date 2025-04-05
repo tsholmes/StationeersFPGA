@@ -50,6 +50,7 @@ Adds a basic FPGA chip, housings and editor motherboard, printable from electron
     [*]Fix error when reading lookup table and gate configuration from IC10
     [/list]
   </ChangeLog>
+  <WorkshopHandle>3457324551</WorkshopHandle>
   <!-- StationeersMods and BepInEx tags for Steam workshop page will be automatically added by the framework when publishing -->
   <Tags>
     <Tag>StationeersMods</Tag>
