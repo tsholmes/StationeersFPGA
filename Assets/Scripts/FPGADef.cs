@@ -379,7 +379,7 @@ namespace fpgamod
         {
           return 0f;
         }
-        var cfg = this._configLines[address];
+        var cfg = this._configLines[idx];
         if (cfg.RawGate && !string.IsNullOrEmpty(cfg.RawGateOp))
         {
           long.TryParse(cfg.RawGateOp[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out long result);
@@ -394,7 +394,7 @@ namespace fpgamod
         {
           return 0f;
         }
-        var cfg = this._configLines[address];
+        var cfg = this._configLines[idx];
         return cfg.LutValue;
       }
       else
