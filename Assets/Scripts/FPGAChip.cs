@@ -83,6 +83,12 @@ namespace fpgamod
       }
     }
 
+    public override void Awake()
+    {
+      base.Awake();
+      this.Recompile();
+    }
+
     public int GetStackSize()
     {
       return FPGADef.AddressCount;
