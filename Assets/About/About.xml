@@ -2,7 +2,7 @@
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>FPGA [StationeersMods]</Name>
   <Author>tom_is_unlucky</Author>
-  <Version>0.1.2</Version>
+  <Version>0.1.3</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
   <Description>[h1]FPGA[/h1]
     [b]WARNING:[/b] This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.
@@ -33,6 +33,8 @@
     Use a computer (not laptop) to import/export to FPGA chips in housings.
 
     Check the stationpedia pages and editor motherboard for more details.
+
+    Also check out the Advanced Computing Mod: https://steamcommunity.com/sharedfiles/filedetails/?id=3465059322
   </Description>
   <!-- Ingame Description using TMP tags for Workshop menu -->
   <InGameDescription>
@@ -45,9 +47,9 @@ Adds a basic FPGA chip, housings and editor motherboard, printable from electron
   </InGameDescription>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->
   <ChangeLog>
-    [h3]Version 0.1.2:[/h3]
+    [h3]Version 0.1.3:[/h3]
     [list]
-    [*]Fix error when running a freshly printed chip
+    [*]Save wireframe edges in prefabs instead of generating on load. Should get rid of long pause before main menu loads.
     [/list]
   </ChangeLog>
   <WorkshopHandle>3457324551</WorkshopHandle>

@@ -79,17 +79,16 @@ namespace fpgamod
     private static void GenerateWireframe(GameObject blueprint, Transform srcTransform)
     {
       var wireframe = blueprint.GetComponent<Wireframe>();
-      if (wireframe == null)
+      var meshFilter = blueprint.GetComponent<MeshFilter>();
+      var meshRenderer = blueprint.GetComponent<MeshRenderer>();
+      meshRenderer.materials = StationeersModsUtility.GetBlueprintMaterials(1);
+
+      if (wireframe == null || wireframe.WireframeEdges.Count > 0)
       {
         return;
       }
 
-      var meshFilter = blueprint.GetComponent<MeshFilter>();
-      var meshRenderer = blueprint.GetComponent<MeshRenderer>();
-
-      wireframe.BlueprintTransform = blueprint.transform;
-      wireframe.BlueprintMeshFilter = meshFilter;
-      wireframe.BlueprintRenderer = meshRenderer;
+      Debug.LogWarning($"generating missing blueprint {blueprint.name}");
 
       var gen = new WireframeGenerator(srcTransform);
 
