@@ -104,7 +104,7 @@ namespace fpgamod
         // we only require power for reading gate outputs. everything else is just configuration.
         return 0;
       }
-      return this.FPGAChip.ReadMemory(address);
+      return this.FPGAChip.ReadMemory(address, this);
     }
 
     public void WriteMemory(int address, double value)

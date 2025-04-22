@@ -199,7 +199,7 @@ namespace fpgamod
       this._modCount++;
       for (var i = 0; i < 8; i++)
       {
-        this._outputs[i] = chip.ReadMemory(i);
+        this._outputs[i] = chip.ReadMemory(i, this);
       }
       this.Setting = this._outputs[0];
     }

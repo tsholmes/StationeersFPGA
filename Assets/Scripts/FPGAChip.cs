@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
-using Assets.Scripts.Objects.Pipes;
 using Assets.Scripts;
 using System;
-using StationeersMods.Interface;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Inventory;
 using Assets.Scripts.Localization2;
@@ -16,9 +14,6 @@ namespace fpgamod
 {
   public class FPGAChip :
     Item,
-    IMemory,
-    IMemoryReadable,
-    IMemoryWritable,
     IPatchOnLoad,
     ICustomUV,
     ISourceCode
@@ -41,8 +36,6 @@ namespace fpgamod
     }
 
     private readonly FPGAGate[] _gates = new FPGAGate[FPGADef.GateCount];
-
-    private IFPGAInput _Input => this.ParentSlot?.Parent as IFPGAInput;
 
     public void PatchOnLoad()
     {
@@ -94,7 +87,7 @@ namespace fpgamod
       return FPGADef.AddressCount;
     }
 
-    public double ReadMemory(int address)
+    public double ReadMemory(int address, IFPGAInput input)
     {
       if (address < 0)
       {
@@ -107,7 +100,7 @@ namespace fpgamod
       var addr = (byte)address;
       if (FPGADef.IsIOAddress(addr))
       {
-        return this.ReadGateValue(addr);
+        return this.ReadGateValue(addr, input);
       }
       if (FPGADef.IsGateAddress(addr) || FPGADef.IsLutAddress(addr))
       {
@@ -152,9 +145,9 @@ namespace fpgamod
       }
     }
 
-    private double ReadGateValue(int index)
+    private double ReadGateValue(int index, IFPGAInput input)
     {
-      return this._gates[index].Eval(this._Input);
+      return this._gates[index].Eval(input);
     }
 
     private void Recompile()
