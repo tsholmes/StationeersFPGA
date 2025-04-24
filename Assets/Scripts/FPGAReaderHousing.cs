@@ -113,6 +113,15 @@ namespace fpgamod
       }
     }
 
+    public override void DeserializeOnJoin(RocketBinaryReader reader)
+    {
+      base.DeserializeOnJoin(reader);
+      for (var i = 0; i < 8; i++)
+      {
+        this._DeviceIDs[i] = reader.ReadInt64();
+      }
+    }
+
     public override ThingSaveData SerializeSave()
     {
       var saveData = new FPGAReaderHousingSaveData();

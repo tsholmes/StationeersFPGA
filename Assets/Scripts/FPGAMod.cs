@@ -7,7 +7,7 @@ using UnityEngine;
 using Assets.Scripts;
 using System.Reflection;
 using System.Collections.Generic;
-[StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.1.4")]
+[StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.1.5")]
 public class FPGAMod : ModBehaviour
 {
   [SerializeField]
