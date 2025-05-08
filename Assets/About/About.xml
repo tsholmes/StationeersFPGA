@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>FPGA [StationeersMods]</Name>
+  <Name>FPGA</Name>
   <Author>tom_is_unlucky</Author>
   <Version>0.1.5</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
   <Description>[h1]FPGA[/h1]
-    [b]WARNING:[/b] This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.
-    See: https://jixxed.github.io/StationeersMods/
+    This requires BepInEx and a modloader installed. Try out [url=https://github.com/StationeersLaunchPad/StationeersLaunchPad]StationeersLaunchPad[/url]. (also compatible with StationeersMods)
 
     The FPGA mod lets you replace a big pile of logic devices with one configurable chip. Connect it with a few Logic Readers and Writers to automate your base, or access it with IC10 chips for fast reusable computation. The chips are easily configurable with the form or text based editors.
 
@@ -39,8 +38,7 @@
   <!-- Ingame Description using TMP tags for Workshop menu -->
   <InGameDescription>
     <![CDATA[<size="30"><color=#ffa500> FPGAMod </color></size>
-<b>WARNING:</b> <color=#ff0000>This is a StationeersMods Plugin Mod. It requires Bepinex to be installed with the StationeersMods plugin.</color>
-See: https://jixxed.github.io/StationeersMods/
+This requires BepInEx and a modloader installed. See: https://github.com/StationeersLaunchPad/StationeersLaunchPad
 
 Adds a basic FPGA chip, housings and editor motherboard, printable from electronics printer.
 ]]>
@@ -53,9 +51,7 @@ Adds a basic FPGA chip, housings and editor motherboard, printable from electron
     [/list]
   </ChangeLog>
   <WorkshopHandle>3457324551</WorkshopHandle>
-  <!-- StationeersMods and BepInEx tags for Steam workshop page will be automatically added by the framework when publishing -->
   <Tags>
-    <Tag>StationeersMods</Tag>
   </Tags>
   <!-- Automatic downloads of dependencies -->
   <Dependencies />
