@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Assets.Scripts;
 using Assets.Scripts.UI;
 using Assets.Scripts.Util;
-using BepInEx;
 using ImGuiNET;
 using UnityEngine;
 
@@ -28,8 +26,10 @@ namespace fpgamod
     private static bool _show = false;
     public static bool Show => _show;
     public static GameObject UIBlocker;
-    private static Vector2 _size = Vector2.zero;
-    private static Vector2 _pos = Vector2.one * 50;
+    private const float _screenPadding = 50;
+    private const float _maxAspect = 16f / 9f;
+    private static Vector2 _size;
+    private static Vector2 _pos;
 
     // custom colors
     private static Vector4[] _colors;
@@ -58,6 +58,13 @@ namespace fpgamod
       }
       Array.Fill(_gridLabels, "");
       Array.Fill(_gridLabelsSquare, "");
+    }
+
+    public static void Initialize(GameObject blockerPrefab)
+    {
+      UIBlocker = GameObject.Instantiate(blockerPrefab);
+      GameObject.DontDestroyOnLoad(UIBlocker);
+      UIBlocker.SetActive(false);
     }
 
     public static void ShowEditor(FPGAMotherboard motherboard)
@@ -129,8 +136,14 @@ namespace fpgamod
 
     private static void UpdateSize()
     {
-      _size.x = Screen.width - 100;
-      _size.y = Screen.height - 100;
+      _size.x = Screen.width - _screenPadding * 2;
+      _size.y = Screen.height - _screenPadding * 2;
+      var aspect = _size.x / _size.y;
+      if (aspect > _maxAspect)
+        _size.x = _size.y * _maxAspect;
+
+      _pos.x = (Screen.width - _size.x) / 2;
+      _pos.y = (Screen.height - _size.y) / 2;
     }
 
     private static void PushDefaultStyle()

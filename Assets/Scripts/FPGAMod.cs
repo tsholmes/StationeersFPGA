@@ -2,38 +2,25 @@ using System;
 using fpgamod;
 using HarmonyLib;
 using StationeersMods.Interface;
-using Assets.Scripts.Objects;
 using UnityEngine;
 using Assets.Scripts;
 using System.Reflection;
-using System.Collections.Generic;
-[StationeersMod("FPGAMod", "FPGAMod [StationeersMods]", "0.1.5")]
+using System.Linq;
+[StationeersMod("FPGAMod", "FPGAMod", "0.1.5")]
 public class FPGAMod : ModBehaviour
 {
-  [SerializeField]
-  public GameObject UIBlocker;
-
-  // private ConfigEntry<bool> configBool;
-
   public override void OnLoaded(ContentHandler contentHandler)
   {
     base.OnLoaded(contentHandler);
 
-    //Config example
-    // configBool = Config.Bind("Input",
-    //     "Boolean",
-    //     true,
-    //     "Boolean description");
-
     Harmony harmony = new Harmony("FPGAMod");
     PrefabPatch.prefabs = contentHandler.prefabs;
+    ImGuiFPGAEditor.Initialize(contentHandler.prefabs.First(go => go.name == "UIBlocker"));
     harmony.PatchAll();
     foreach (var m in harmony.GetPatchedMethods())
     {
       Debug.Log(m.FullDescription());
     }
-
-    ImGuiFPGAEditor.UIBlocker = UIBlocker;
 
     Debug.Log("FPGAMod Loaded with " + contentHandler.prefabs.Count + " prefab(s)");
   }
