@@ -6,7 +6,7 @@ using UnityEngine;
 using Assets.Scripts;
 using System.Reflection;
 using System.Linq;
-[StationeersMod("FPGAMod", "FPGAMod", "0.1.5")]
+[StationeersMod("FPGAMod", "FPGAMod", "0.1.6")]
 public class FPGAMod : ModBehaviour
 {
   public override void OnLoaded(ContentHandler contentHandler)
