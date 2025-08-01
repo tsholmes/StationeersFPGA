@@ -18,7 +18,8 @@
         "StationeersMods.Interface.dll",
         "0Harmony.dll",
         "BepInEx.dll",
-        "RG.ImGui.dll"
+        "RG.ImGui.dll",
+        "UniTask.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

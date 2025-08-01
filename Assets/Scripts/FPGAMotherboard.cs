@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
+using Assets.Scripts.GridSystem;
 using Assets.Scripts.Networking;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
+using Cysharp.Threading.Tasks;
 using StationeersMods.Interface;
 using UnityEngine;
 using UnityUI = UnityEngine.UI;
@@ -53,7 +55,8 @@ namespace fpgamod
       mesh.mesh = emesh.mesh;
 
       // copy font
-      var etitle = existing.transform.Find("ProgrammingWindow/ScreenTitle").GetComponent<UnityUI.Text>();
+      var root = existing.transform.Find("ProgrammingWindow") ?? existing.transform.Find("ProgrammableChipMotherboardPanel");
+      var etitle = root.Find("ScreenTitle").GetComponent<UnityUI.Text>();
       var title = this.transform.Find("EditWindow/ScreenTitle").GetComponent<UnityUI.Text>();
       title.font = etitle.font;
 
@@ -137,6 +140,22 @@ namespace fpgamod
 
     private void LoadConnected()
     {
+      if (this._loadingConnected)
+        return;
+      this._loadingConnected = true;
+      this.LoadConnectedAsync().Forget();
+    }
+
+    private bool _loadingConnected;
+    private async UniTaskVoid LoadConnectedAsync()
+    {
+      // modeled after ProgrammableChipMotherboard.HandleDeviceListChange to hopefully minimize errors
+      if (!GameManager.IsMainThread)
+        await UniTask.SwitchToMainThread();
+      var cancelToken = this.GetCancellationTokenOnDestroy();
+      while (GameManager.GameState != GameState.Running)
+        await UniTask.NextFrame(cancelToken);
+      await UniTask.NextFrame(cancelToken);
       var current = this.IsSelectedIndexValid ? this.ConnectedFPGAHolders[this.SelectedHolderIndex] : null;
       this.ConnectedFPGAHolders.Clear();
       if (this.ParentComputer == null || !this.ParentComputer.AsThing().isActiveAndEnabled)
@@ -161,6 +180,7 @@ namespace fpgamod
       {
         this.SelectedHolderIndex = 0;
       }
+      this._loadingConnected = false;
     }
 
     public void Import()
