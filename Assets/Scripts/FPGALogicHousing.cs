@@ -70,6 +70,55 @@ namespace fpgamod
       }
       return null;
     }
+
+    public override ThingSaveData SerializeSave()
+    {
+      var saveData = new FPGALogicHousingSaveData();
+      var baseData = saveData as ThingSaveData;
+      this.InitialiseSaveData(ref baseData);
+      return saveData;
+    }
+
+    protected override void InitialiseSaveData(ref ThingSaveData baseData)
+    {
+      base.InitialiseSaveData(ref baseData);
+      if (baseData is not FPGALogicHousingSaveData saveData)
+        return;
+      var nonZero = 0ul;
+      var values = new List<double>();
+      for (var i = 0; i < this._inputValues.Length; i++)
+      {
+        var val = this._inputValues[i];
+        if (val == 0)
+          continue;
+        nonZero |= 1ul << i;
+        values.Add(val);
+      }
+      saveData.NonZero = nonZero;
+      saveData.Values = values.ToArray();
+    }
+
+    public override void DeserializeSave(ThingSaveData baseData)
+    {
+      base.DeserializeSave(baseData);
+      if (baseData is not FPGALogicHousingSaveData saveData)
+        return;
+      Array.Fill(this._inputValues, 0);
+      if (saveData.Values == null)
+        return;
+      var vindex = 0;
+      for (var i = 0; i < this._inputValues.Length; i++)
+      {
+        // this shouldn't happen unless there is bad savedata
+        if (vindex >= saveData.Values.Length)
+          break;
+        if ((saveData.NonZero & (1ul << i)) == 0)
+          continue;
+        this._inputValues[i] = saveData.Values[vindex];
+        vindex++;
+      }
+    }
+
     public void ClearMemory()
     {
       if (this.FPGAChip == null)
@@ -133,7 +182,7 @@ namespace fpgamod
 
     public double GetFPGAInputPin(int index)
     {
-      if (index < 0 || index > FPGADef.InputCount)
+      if (index < 0 || index >= FPGADef.InputCount)
       {
         return double.NaN;
       }
