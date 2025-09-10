@@ -37,7 +37,8 @@ namespace fpgamod
           {
             FixMaterials(thing);
           }
-          WorldManager.Instance.AddPrefab(thing);
+          WorldManager.Instance.SourcePrefabs.Add(thing);
+          Debug.Log($"Added {thing.PrefabName} to WorldManager.SourcePrefabs");
         }
       }
       catch (Exception ex)
