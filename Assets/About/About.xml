@@ -2,7 +2,7 @@
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>FPGA</Name>
   <Author>tom_is_unlucky</Author>
-  <Version>0.1.8</Version>
+  <Version>0.1.9</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
   <Description>[h1]FPGA[/h1]
     This requires BepInEx and a modloader installed. Try out [url=https://github.com/StationeersLaunchPad/StationeersLaunchPad]StationeersLaunchPad[/url]. (also compatible with StationeersMods)
@@ -45,9 +45,9 @@ Adds a basic FPGA chip, housings and editor motherboard, printable from electron
   </InGameDescription>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->
   <ChangeLog>
-    [h3]Version 0.1.8:[/h3]
+    [h3]Version 0.1.9:[/h3]
     [list]
-    [*]Save fpga logic housing inputs
+    [*]Fix prefab loading in beta
     [/list]
   </ChangeLog>
   <WorkshopHandle>3457324551</WorkshopHandle>
