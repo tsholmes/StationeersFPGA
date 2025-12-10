@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Assets.Scripts;
 using Assets.Scripts.Localization2;
 using Assets.Scripts.Networking;
 using Assets.Scripts.Objects;
@@ -8,8 +5,8 @@ using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Motherboards;
 using Assets.Scripts.Objects.Pipes;
+using LaunchPadBooster.Utils;
 using Objects.Electrical;
-using StationeersMods.Interface;
 using UnityEngine;
 
 namespace fpgamod
@@ -34,14 +31,14 @@ namespace fpgamod
 
     public void PatchOnLoad()
     {
-      this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
+      this.SetExitTool(PrefabNames.Drill);
       this._FPGASlot.Type = FPGAChip.FPGASlotType;
     }
 
 
     public override void OnPrefabLoad()
     {
-      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
+      var src = PrefabUtils.FindPrefab<Structure>("StructureCircuitHousing");
       var srcOnOff = src.transform.Find("OnOffNoShadow");
       var onOff = GameObject.Instantiate(srcOnOff, this.transform);
       this.Interactables[2].Collider = onOff.GetComponent<SphereCollider>();
@@ -55,30 +52,16 @@ namespace fpgamod
       base.OnPrefabLoad();
     }
 
-    public Vector2? GetUV(GameObject obj)
+    public Vector2? GetUV(GameObject obj) => this.RelativePath(obj) switch
     {
-      if (obj == this.transform.Find("FPGAHousing_readerbase/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 0, 6); // match IC housing base
-      }
-      if (obj == this.transform.Find("PowerSymbol/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 2, 5); // match builtin power symbol
-      }
-      if (obj == this.transform.Find("DataInSymbol/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
-      }
-      if (obj == this.transform.Find("DataOutSymbol/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
-      }
-      if (obj == this.transform.Find("FPGAHousing_pins/default").gameObject)
-      {
-        return FPGAMod.UVTile(64, 3, 7);
-      }
-      return null;
-    }
+
+      "FPGAHousing_readerbase/default" => ModUtils.UVTile(16, 0, 6),
+      "PowerSymbol/default" => ModUtils.UVTile(16, 2, 5),
+      "DataInSymbol/default" => ModUtils.UVTile(16, 1, 4),
+      "DataOutSymbol/default" => ModUtils.UVTile(16, 1, 4),
+      "FPGAHousing_pins/default" => ModUtils.UVTile(64, 3, 7),
+      _ => null,
+    };
 
     public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
     {
@@ -86,9 +69,7 @@ namespace fpgamod
       if (Thing.IsNetworkUpdateRequired(FLAG_DEVICES, networkUpdateType))
       {
         for (var i = 0; i < 8; i++)
-        {
           writer.WriteInt64(this.Devices[i]?.ReferenceId ?? 0);
-        }
       }
     }
 
@@ -98,9 +79,7 @@ namespace fpgamod
       if (Thing.IsNetworkUpdateRequired(FLAG_DEVICES, networkUpdateType))
       {
         for (var i = 0; i < 8; i++)
-        {
           this.Devices[i] = Referencable.Find<ILogicable>(reader.ReadInt64());
-        }
       }
     }
 
@@ -108,18 +87,14 @@ namespace fpgamod
     {
       base.SerializeOnJoin(writer);
       for (var i = 0; i < 8; i++)
-      {
         writer.WriteInt64(this.Devices[i]?.ReferenceId ?? 0);
-      }
     }
 
     public override void DeserializeOnJoin(RocketBinaryReader reader)
     {
       base.DeserializeOnJoin(reader);
       for (var i = 0; i < 8; i++)
-      {
         this._DeviceIDs[i] = reader.ReadInt64();
-      }
     }
 
     public override ThingSaveData SerializeSave()
@@ -134,15 +109,11 @@ namespace fpgamod
     {
       base.DeserializeSave(baseData);
       if (baseData is not FPGAReaderHousingSaveData saveData)
-      {
         return;
-      }
       if (saveData.DeviceIDs != null)
       {
         for (var i = 0; i < saveData.DeviceIDs.Length && i < 8; i++)
-        {
           this._DeviceIDs[i] = saveData.DeviceIDs[i];
-        }
       }
     }
 
@@ -150,51 +121,33 @@ namespace fpgamod
     {
       base.InitialiseSaveData(ref baseData);
       if (baseData is not FPGAReaderHousingSaveData saveData)
-      {
         return;
-      }
       saveData.DeviceIDs = new long[8];
       for (var i = 0; i < 8; i++)
-      {
         saveData.DeviceIDs[i] = this.Devices[i]?.ReferenceId ?? 0;
-      }
     }
 
     public override void OnFinishedLoad()
     {
       base.OnFinishedLoad();
       for (var i = 0; i < 8; i++)
-      {
         this.Devices[i] = Thing.Find<Device>(this._DeviceIDs[i]);
-      }
     }
 
     public double GetFPGAInputPin(int index)
     {
       if (index < 0 || index >= 8)
-      {
         return double.NaN;
-      }
       if (this.Devices[index] == null)
-      {
         return 0;
-      }
       if (!this.InputNetwork1.DeviceList.Contains(this))
-      {
         return 0;
-      }
       return this.Devices[index].GetLogicValue(LogicType.Setting);
     }
 
-    public long GetFPGAInputModCount()
-    {
-      return this._modCount;
-    }
+    public long GetFPGAInputModCount() => this._modCount;
 
-    public FPGAChip GetFPGAChip()
-    {
-      return this.FPGAChip;
-    }
+    public FPGAChip GetFPGAChip() => this.FPGAChip;
 
     public override void OnPowerTick()
     {
@@ -202,14 +155,10 @@ namespace fpgamod
       this.LogicChanged();
       var chip = this.FPGAChip;
       if (!this.OnOff || !this.Powered || chip == null)
-      {
         return;
-      }
       this._modCount++;
       for (var i = 0; i < 8; i++)
-      {
         this._outputs[i] = chip.ReadMemory(i, this);
-      }
       this.Setting = this._outputs[0];
     }
 
@@ -225,18 +174,14 @@ namespace fpgamod
     {
       var index = InteractableIndex(interactable.Action);
       if (index != -1)
-      {
         return GetDeviceNameWithLabel(index);
-      }
       return base.GetContextualName(interactable);
     }
 
     public override DelayedActionInstance InteractWith(Interactable interactable, Interaction interaction, bool doAction = true)
     {
       if (interactable == null)
-      {
         return null;
-      }
       var index = InteractableIndex(interactable.Action);
       if (index != -1)
       {
@@ -246,55 +191,37 @@ namespace fpgamod
           ActionMessage = interactable.ContextualName,
         };
         if (!interaction.SourceSlot.Contains<Screwdriver>())
-        {
           return action.Fail(GameStrings.RequiresScrewdriver);
-        }
         action = Logicable._TryGetNextLogicDevice(interactable, interaction, ref this.Devices[index], this.InputNetwork1DevicesSorted, doAction, 255);
         if (doAction)
-        {
           this.NetworkUpdateFlags |= FLAG_DEVICES;
-        }
         return action;
       }
       return base.InteractWith(interactable, interaction, doAction);
     }
 
-    private int InteractableIndex(InteractableType typ)
+    private int InteractableIndex(InteractableType typ) => typ switch
     {
-      switch (typ)
-      {
-        case InteractableType.Button1:
-          return 0;
-        case InteractableType.Button2:
-          return 1;
-        case InteractableType.Button3:
-          return 2;
-        case InteractableType.Button4:
-          return 3;
-        case InteractableType.Button5:
-          return 4;
-        case InteractableType.Button6:
-          return 5;
-        case InteractableType.Button7:
-          return 6;
-        case InteractableType.Button8:
-          return 7;
-        default:
-          return -1;
-      }
-    }
+      InteractableType.Button1 => 0,
+      InteractableType.Button2 => 1,
+      InteractableType.Button3 => 2,
+      InteractableType.Button4 => 3,
+      InteractableType.Button5 => 4,
+      InteractableType.Button6 => 5,
+      InteractableType.Button7 => 6,
+      InteractableType.Button8 => 7,
+      _ => -1,
+    };
 
-    public override bool CanLogicRead(LogicType logicType)
-    {
-      return base.CanLogicRead(logicType) || logicType == LogicType.Setting || (logicType >= LogicType.Channel0 && logicType <= LogicType.Channel7);
-    }
+    public override bool CanLogicRead(LogicType logicType) =>
+      base.CanLogicRead(logicType) ||
+      logicType == LogicType.Setting ||
+      (logicType >= LogicType.Channel0 && logicType <= LogicType.Channel7);
 
     public override double GetLogicValue(LogicType logicType)
     {
       if (logicType >= LogicType.Channel0 && logicType <= LogicType.Channel7)
-      {
         return this._outputs[logicType - LogicType.Channel0];
-      }
       return base.GetLogicValue(logicType);
     }
   }

@@ -108,9 +108,7 @@ namespace fpgamod
     private static void AutoOpen()
     {
       if (Motherboard == null)
-      {
         return;
-      }
       Motherboard.InputOpen = 0;
       Motherboard.GateOpen = 0;
       Motherboard.LutOpen = 0;
@@ -158,9 +156,7 @@ namespace fpgamod
           // premultiply alpha and set to opaque if not fully transparent
           _colors[i] = _colors[i] * _colors[i][3];
           if (_colors[i][3] != 0f)
-          {
             _colors[i][3] = 1f;
-          }
         }
         _activeGridColors = new Vector4[] {
           HSVColor(170/360f, 0.75f, 0.4f), // button
@@ -171,9 +167,7 @@ namespace fpgamod
       }
 
       for (var i = (ImGuiCol)0; i < ImGuiCol.COUNT; i++)
-      {
         ImGui.PushStyleColor(i, _colors[(int)i]);
-      }
       ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(3, 2));
       ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3, 2));
     }
@@ -194,18 +188,14 @@ namespace fpgamod
     public static void Draw()
     {
       if (!_show)
-      {
         return;
-      }
       UpdateSize();
       Localization.PushFont();
       PushDefaultStyle();
 
       ImGui.Begin("FPGA Editor", ref _show, windowFlags);
       if (!_show)
-      {
         HideEditor(); // if we exited, hide
-      }
       else
       {
         ImGui.SetWindowSize(_size);
@@ -273,9 +263,7 @@ namespace fpgamod
           var selected = i == Motherboard.SelectedHolderIndex;
           ImGui.PushID(i);
           if (ImGui.Selectable(name, selected))
-          {
             Motherboard.SelectedHolderIndex = i;
-          }
           ImGui.PopID();
         }
         ImGui.EndCombo();
@@ -307,9 +295,7 @@ namespace fpgamod
             AutoOpen();
           }
           if (!string.IsNullOrEmpty(example.Tooltip))
-          {
             ItemTooltip(example.Tooltip);
-          }
         }
         ImGui.EndCombo();
       }
@@ -347,17 +333,13 @@ namespace fpgamod
       if (ImGui.BeginTable(id, 8, new Vector2(size * 8, 0)))
       {
         for (var col = 0; col < 8; col++)
-        {
           ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, size);
-        }
         for (var i = 0; i < 64; i++)
         {
           ImGui.PushID(i);
           var col = i % 8;
           if (col == 0)
-          {
             ImGui.TableNextRow(0, size);
-          }
           ImGui.TableSetColumnIndex(col);
           var address = (byte)(i + addressOffset);
           var srcLabel = Def.GetLabel(address, nameFallback: false);
@@ -375,9 +357,7 @@ namespace fpgamod
           var textSize = ImGui.CalcTextSize(sqlabel);
           ImGui.SetWindowFontScale(Math.Min(1f, (size - 2) / Math.Max(textSize.x, textSize.y)));
           if (ImGui.Button(sqlabel, vecSize))
-          {
             open ^= 1ul << i;
-          }
           ImGui.SetWindowFontScale(1f);
           ItemTooltip(tooltip);
           if (isOpen)
@@ -387,9 +367,7 @@ namespace fpgamod
             ImGui.GetWindowDrawList().AddRect(rmin, rmax, _openBorderColor);
           }
           if (hasConfig)
-          {
             ImGui.PopStyleColor(3);
-          }
           if (ImGui.BeginDragDropSource())
           {
             ImGui.SetDragDropPayload<byte>("gate_input", address);
@@ -422,9 +400,7 @@ namespace fpgamod
     private static void DrawEditorInputs()
     {
       if (Def == null || Motherboard.InputOpen == 0)
-      {
         return;
-      }
       if (ImGui.CollapsingHeader("Inputs", ImGuiTreeNodeFlags.DefaultOpen) &&
           ImGui.BeginTable("inputEditTable", 2, editTableFlags))
       {
@@ -457,9 +433,7 @@ namespace fpgamod
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
         if (ImGui.InputTextWithHint("##label", FPGADef.InputNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
-        {
           Def.SetLabel(address, label);
-        }
       }
       ImGui.PopID();
     }
@@ -467,9 +441,7 @@ namespace fpgamod
     private static void DrawEditorGates()
     {
       if (Def == null || Motherboard.GateOpen == 0)
-      {
         return;
-      }
       if (ImGui.CollapsingHeader("Gates", ImGuiTreeNodeFlags.DefaultOpen) &&
           ImGui.BeginTable("gateEditTable", 5, editTableFlags))
       {
@@ -508,9 +480,7 @@ namespace fpgamod
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
         if (ImGui.InputTextWithHint("##label", FPGADef.GateNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
-        {
           Def.SetLabel(address, label);
-        }
       }
       {
         ImGui.TableNextColumn();
@@ -520,9 +490,7 @@ namespace fpgamod
           ImGui.SetNextItemWidth(-float.Epsilon);
           var pickFirst = ImGui.InputTextWithHint("##opsearch", "search", ref _gateEditSearch, 6u, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue);
           if (ImGui.IsWindowAppearing())
-          {
             ImGui.SetKeyboardFocusHere(-1);
-          }
           var searchLower = _gateEditSearch.ToLower();
           var hasFound = false;
           for (var op = FPGAOp.None; op < FPGAOps.Count; op++)
@@ -546,42 +514,30 @@ namespace fpgamod
             ImGui.Text("no matching ops");
             ImGui.EndDisabled();
             if (pickFirst)
-            {
               ImGui.CloseCurrentPopup();
-            }
           }
           ImGui.EndCombo();
         }
         ItemTooltip(currentInfo.Hint);
         if (ImGui.IsItemDeactivated())
-        {
           _gateEditSearch = "";
-        }
       }
       {
         ImGui.TableNextColumn();
         ImGui.PushID("input1");
         if (currentInfo.Operands > 0)
-        {
           DrawEditorGateInput(address, false);
-        }
         else
-        {
           ImGui.Text("-");
-        }
         ImGui.PopID();
       }
       {
         ImGui.TableNextColumn();
         ImGui.PushID("input2");
         if (currentInfo.Operands > 1)
-        {
           DrawEditorGateInput(address, true);
-        }
         else
-        {
           ImGui.Text("-");
-        }
         ImGui.PopID();
       }
       ImGui.PopID();
@@ -596,9 +552,7 @@ namespace fpgamod
         ImGui.SetNextItemWidth(-float.Epsilon);
         var pickFirst = ImGui.InputTextWithHint("##inputsearch", "search", ref _gateEditSearch, 32u, ImGuiInputTextFlags.CharsNoBlank | ImGuiInputTextFlags.EnterReturnsTrue);
         if (ImGui.IsWindowAppearing())
-        {
           ImGui.SetKeyboardFocusHere(-1);
-        }
         var searchLower = _gateEditSearch.ToLower();
         var hasFound = false;
         for (byte inputAddress = 0; inputAddress < 192; inputAddress++)
@@ -613,19 +567,13 @@ namespace fpgamod
             {
               pickFirst = false;
               if (isInput2)
-              {
                 Def.SetGateInput2(address, inputAddress);
-              }
               else
-              {
                 Def.SetGateInput1(address, inputAddress);
-              }
               ImGui.CloseCurrentPopup();
             }
             if (label != name)
-            {
               ItemTooltip(name);
-            }
           }
         }
         if (!hasFound)
@@ -634,28 +582,20 @@ namespace fpgamod
           ImGui.Text("no matches");
           ImGui.EndDisabled();
           if (pickFirst)
-          {
             ImGui.CloseCurrentPopup();
-          }
         }
         ImGui.EndCombo();
       }
       if (ImGui.IsItemDeactivated())
-      {
         _gateEditSearch = "";
-      }
       if (ImGui.BeginDragDropTarget())
       {
         if (ImGui.AcceptDragDropPayload<byte>("gate_input", out byte inputAddress))
         {
           if (isInput2)
-          {
             Def.SetGateInput2(address, inputAddress);
-          }
           else
-          {
             Def.SetGateInput1(address, inputAddress);
-          }
         }
         ImGui.EndDragDropTarget();
       }
@@ -664,9 +604,7 @@ namespace fpgamod
     private static void DrawEditorLUTs()
     {
       if (Def == null || Motherboard.LutOpen == 0)
-      {
         return;
-      }
       if (ImGui.CollapsingHeader("Lookup Table", ImGuiTreeNodeFlags.DefaultOpen) &&
           ImGui.BeginTable("lutEditTable", 3, editTableFlags))
       {
@@ -700,18 +638,14 @@ namespace fpgamod
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
         if (ImGui.InputTextWithHint("##label", FPGADef.LutNames[index], ref label, 32u, ImGuiInputTextFlags.CharsNoBlank))
-        {
           Def.SetLabel(address, label);
-        }
       }
       {
         var value = Def.GetLutValue(address);
         ImGui.TableNextColumn();
         ImGui.SetNextItemWidth(-float.Epsilon);
         if (ImGui.InputDouble("##value", ref value, "%f"))
-        {
           Def.SetLutValue(address, value);
-        }
       }
       ImGui.PopID();
     }
@@ -719,9 +653,7 @@ namespace fpgamod
     private static void DrawRawEditor()
     {
       if (ImGui.IsWindowAppearing())
-      {
         _rawDef = Def.GetRaw();
-      }
       var topLeft = ImGui.GetCursorScreenPos();
       var lineHeight = ImGui.GetTextLineHeight();
       var available = ImGui.GetContentRegionAvail();
@@ -735,9 +667,7 @@ namespace fpgamod
         ImGui.SetNextWindowSizeConstraints(Vector2.zero, Vector2.one * float.MaxValue, RawEditorCallback);
       }
       if (ImGui.InputTextMultiline("##raw", ref _rawDef, 65536, Vector2.one * -float.Epsilon))
-      {
         Def = FPGADef.Parse(_rawDef);
-      }
 
       ImGui.PushClipRect(topLeft, new Vector2(topLeft.x + gutterWidth, topLeft.y + available.y), true);
       var cfgCount = Def.GetConfigLineCount();
@@ -764,9 +694,7 @@ namespace fpgamod
         {
           var err = Def.GetConfigLineError(lineNumber);
           if (err != null)
-          {
             ImGui.SetTooltip(err.Message);
-          }
         }
       }
     }
@@ -793,9 +721,7 @@ namespace fpgamod
           var index = (int)op;
           var info = FPGAOps.GetOpInfo(op);
           if (_hexStrings[index] == null)
-          {
             _hexStrings[index] = $"${index:X2}";
-          }
           ImGui.TableNextRow();
           ImGui.TableNextColumn(); ImGui.Selectable(info.Symbol, false, ImGuiSelectableFlags.SpanAllColumns);
           ImGui.TableNextColumn(); ImGui.Text(info.Hint);
@@ -809,9 +735,7 @@ namespace fpgamod
     private static void ItemTooltip(string text)
     {
       if (text.Length > 0 && ImGui.IsItemHovered())
-      {
         ImGui.SetTooltip(text);
-      }
     }
 
     private static string GetGridLabel(byte address, string src, float minWrapWidth)
@@ -821,21 +745,15 @@ namespace fpgamod
         var lo = 1;
         var hi = src.Length;
         if (ImGui.CalcTextSize(src).x <= minWrapWidth)
-        {
           lo = hi;
-        }
         while (lo < hi)
         {
           var mid = (lo + hi) >> 1;
           var sz = ImGui.CalcTextSize(WrapString(src, mid));
           if (sz.x >= sz.y)
-          {
             hi = mid;
-          }
           else
-          {
             lo = mid + 1;
-          }
         }
         _gridLabels[address] = src;
         // make as even as possible while keeping number of lines
@@ -853,9 +771,7 @@ namespace fpgamod
       foreach (var line in src.SplitBy(charsPerLine))
       {
         if (!first)
-        {
           sb.Append('\n');
-        }
         first = false;
         sb.Append(line);
       }

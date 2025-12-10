@@ -1,14 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using Assets.Scripts;
-using StationeersMods.Interface;
+using Assets.Scripts.Objects;
+using LaunchPadBooster.Utils;
 using UnityEngine;
 
 namespace fpgamod
 {
-  public class MultiConstructor :
-  Assets.Scripts.Objects.MultiConstructor,
-  IPatchOnLoad
+  public class MultiConstructor : Assets.Scripts.Objects.MultiConstructor, IPatchOnLoad
   {
     [SerializeField]
     public string ModelCopyPrefab;
@@ -17,7 +13,7 @@ namespace fpgamod
     {
       if (this.ModelCopyPrefab != "")
       {
-        var src = StationeersModsUtility.FindPrefab(this.ModelCopyPrefab);
+        var src = PrefabUtils.FindPrefab<Thing>(this.ModelCopyPrefab);
         this.Thumbnail = src.Thumbnail;
         this.Blueprint = src.Blueprint;
         this.PaintableMaterial = src.PaintableMaterial;

@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.Objects.Electrical;
-using UnityEngine;
 
 namespace fpgamod
 {
@@ -81,7 +79,7 @@ namespace fpgamod
     {
       return InfoDict.GetValueOrDefault(op, InvalidOp);
     }
-    public static FPGAOpInfo InvalidOp = new FPGAOpInfo { Symbol = "invalid", Hint = "", ConstantOp = () => double.NaN };
+    public static FPGAOpInfo InvalidOp = new() { Symbol = "invalid", Hint = "", ConstantOp = () => double.NaN };
     public static readonly Dictionary<FPGAOp, FPGAOpInfo> InfoDict = new()
     {
       [FPGAOp.None] = new FPGAOpInfo { Symbol = "none", Hint = "", ConstantOp = () => 0 },
@@ -135,9 +133,7 @@ namespace fpgamod
     {
       SymbolToOp = new();
       for (FPGAOp op = FPGAOp.None; op < Count; op++)
-      {
         SymbolToOp[InfoDict[op].Symbol] = op;
-      }
     }
 
     // unary op impl
@@ -169,9 +165,9 @@ namespace fpgamod
     private static Func<double, double, double> OpBitSra = BinaryBitOp((val1, val2) => val1 >> (int)val2);
     private static Func<double, double, double> OpBitSrl = BinaryBitOp((val1, val2) => val1 >> (int)val2, firstSigned: false);
 
-    private static Func<double, double, double> BinaryBitOp(Func<long, long, long> op, bool firstSigned = true)
-    {
-      return (val1, val2) => ProgrammableChip.LongToDouble(op(ProgrammableChip.DoubleToLong(val1, firstSigned), ProgrammableChip.DoubleToLong(val2, true)));
-    }
+    private static Func<double, double, double> BinaryBitOp(Func<long, long, long> op, bool firstSigned = true) =>
+      (val1, val2) => ProgrammableChip.LongToDouble(
+        op(ProgrammableChip.DoubleToLong(val1, firstSigned),
+        ProgrammableChip.DoubleToLong(val2, true)));
   }
 }

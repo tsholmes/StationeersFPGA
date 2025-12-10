@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
@@ -40,18 +38,14 @@ namespace fpgamod
     public void PatchOnLoad()
     {
       this.SlotType = FPGASlotType;
-
-      FPGAMod.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, FPGASlotTypeName);
+      ModUtils.PatchEnumCollection(EnumCollections.SlotClasses, FPGASlotType, FPGASlotTypeName);
     }
 
-    public Vector2? GetUV(GameObject obj)
+    public Vector2? GetUV(GameObject obj) => this.RelativePath(obj) switch
     {
-      if (obj == this.transform.Find("FPGAChip_pins/default").gameObject)
-      {
-        return FPGAMod.UVTile(64, 3, 7); // roughly match ic10 pins
-      }
-      return null;
-    }
+      "FPGAChip_pins/default" => ModUtils.UVTile(64, 3, 7),// roughly match ic10 pins
+      _ => null,
+    };
 
     public override ThingSaveData SerializeSave()
     {

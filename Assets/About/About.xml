@@ -2,10 +2,10 @@
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>FPGA</Name>
   <Author>tom_is_unlucky</Author>
-  <Version>0.1.9</Version>
+  <Version>0.2.0</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
   <Description>[h1]FPGA[/h1]
-    This requires BepInEx and a modloader installed. Try out [url=https://github.com/StationeersLaunchPad/StationeersLaunchPad]StationeersLaunchPad[/url]. (also compatible with StationeersMods)
+    This requires BepInEx and [url=https://github.com/StationeersLaunchPad/StationeersLaunchPad]StationeersLaunchPad[/url].
 
     The FPGA mod lets you replace a big pile of logic devices with one configurable chip. Connect it with a few Logic Readers and Writers to automate your base, or access it with IC10 chips for fast reusable computation. The chips are easily configurable with the form or text based editors.
 
@@ -35,19 +35,12 @@
 
     Also check out the Advanced Computing Mod: https://steamcommunity.com/sharedfiles/filedetails/?id=3465059322
   </Description>
-  <!-- Ingame Description using TMP tags for Workshop menu -->
-  <InGameDescription>
-    <![CDATA[<size="30"><color=#ffa500> FPGAMod </color></size>
-This requires BepInEx and a modloader installed. See: https://github.com/StationeersLaunchPad/StationeersLaunchPad
-
-Adds a basic FPGA chip, housings and editor motherboard, printable from electronics printer.
-]]>
-  </InGameDescription>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->
   <ChangeLog>
-    [h3]Version 0.1.9:[/h3]
+    [h3]Version 0.2.0:[/h3]
     [list]
-    [*]Fix prefab loading in beta
+    [*]Fix UniTask error for Respawn Update
+    [*]Allow import/export from FPGA chips in Advanced Computing Chip Stack
     [/list]
   </ChangeLog>
   <WorkshopHandle>3457324551</WorkshopHandle>

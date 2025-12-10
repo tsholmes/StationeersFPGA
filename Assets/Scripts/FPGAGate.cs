@@ -1,9 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Assets.Scripts;
 using Assets.Scripts.Objects.Electrical;
-using UnityEngine;
 
 namespace fpgamod
 {
@@ -38,9 +34,7 @@ namespace fpgamod
 
       var inputGates = new FPGAGate[FPGADef.InputCount];
       for (var i = 0; i < FPGADef.InputCount; i++)
-      {
         inputGates[i] = new InputGate(i);
-      }
       var lut = new double[FPGADef.LutCount];
       var lutGates = new FPGAGate[FPGADef.LutCount];
       for (var i = 0; i < FPGADef.LutCount; i++)
@@ -49,43 +43,31 @@ namespace fpgamod
         lutGates[i] = new ConstantGate(lut[i]);
       }
       var errGate = new ConstantGate(double.NaN);
-      Func<byte, FPGAGate> getGate = address =>
+
+      FPGAGate getGate(byte address)
       {
         if (FPGADef.IsIOAddress(address))
-        {
           return inputGates[address - FPGADef.InputOffset];
-        }
         if (FPGADef.IsGateAddress(address))
-        {
           return gates[address - FPGADef.GateOffset];
-        }
         if (FPGADef.IsLutAddress(address))
-        {
           return lutGates[address - FPGADef.LutOffset];
-        }
         return errGate;
-      };
-      Action<byte> markCircular = address =>
+      }
+      void markCircular(byte address)
       {
         if (!FPGADef.IsGateAddress(address))
-        {
           throw new Exception("invalid circular mark");
-        }
         circular[address - FPGADef.GateOffset] = true;
         gates[address - FPGADef.GateOffset] = errGate;
-      };
-      Func<byte, bool> buildGate = null;
-      buildGate = address =>
+      }
+      bool buildGate(byte address)
       {
         if (!FPGADef.IsGateAddress(address))
-        {
           return false;
-        }
         var index = address - FPGADef.GateOffset;
         if (gates[index] != null)
-        {
           return circular[index];
-        }
         if (building[index])
         {
           markCircular(address);
@@ -117,31 +99,24 @@ namespace fpgamod
         building[index] = false;
         return false;
       }
-        ;
+
       for (var i = 0; i < FPGADef.GateCount; i++)
-      {
         buildGate((byte)(i + FPGADef.GateOffset));
-      }
     }
 
     private static FPGAGate MakeGate(FPGAOp op, FPGAGate g0, FPGAGate g1, double[] lut)
     {
       // special handling for lookup
       if (op == FPGAOp.Lookup)
-      {
         return new LookupGate(g0, lut);
-      }
       var info = FPGAOps.GetOpInfo(op);
-      switch (info.Operands)
+      return info.Operands switch
       {
-        case 0:
-          return new ConstantGate(info.ConstantOp());
-        case 1:
-          return new UnaryGate(info.UnaryOp, g0);
-        case 2:
-          return new BinaryGate(info.BinaryOp, g0, g1);
-      }
-      throw new Exception("invalid operand count");
+        0 => new ConstantGate(info.ConstantOp()),
+        1 => new UnaryGate(info.UnaryOp, g0),
+        2 => new BinaryGate(info.BinaryOp, g0, g1),
+        _ => throw new Exception("invalid operand count"),
+      };
     }
 
     private class ConstantGate : FPGAGate
@@ -149,10 +124,7 @@ namespace fpgamod
       private readonly double value;
       public ConstantGate(double value) { this.value = value; }
 
-      public override double Op(IFPGAInput input)
-      {
-        return value;
-      }
+      public override double Op(IFPGAInput input) => value;
     }
 
     private class InputGate : FPGAGate
@@ -160,10 +132,7 @@ namespace fpgamod
       private readonly int index;
       public InputGate(int index) { this.index = index; }
 
-      public override double Op(IFPGAInput input)
-      {
-        return input.GetFPGAInputPin(this.index);
-      }
+      public override double Op(IFPGAInput input) => input.GetFPGAInputPin(this.index);
     }
 
     private class LookupGate : FPGAGate
@@ -180,9 +149,7 @@ namespace fpgamod
       {
         var idx = ProgrammableChip.DoubleToLong(this.g0.Eval(input), true);
         if (idx < 0 || idx >= this.lut.Length)
-        {
           return double.NaN;
-        }
         return this.lut[idx];
       }
     }
@@ -197,10 +164,7 @@ namespace fpgamod
         this.g0 = g0;
       }
 
-      public override double Op(IFPGAInput input)
-      {
-        return this.op(this.g0.Eval(input));
-      }
+      public override double Op(IFPGAInput input) => this.op(this.g0.Eval(input));
     }
 
     private class BinaryGate : FPGAGate
@@ -216,10 +180,7 @@ namespace fpgamod
         this.g1 = g1;
       }
 
-      public override double Op(IFPGAInput input)
-      {
-        return this.op(this.g0.Eval(input), this.g1.Eval(input));
-      }
+      public override double Op(IFPGAInput input) => this.op(this.g0.Eval(input), this.g1.Eval(input));
     }
   }
 }

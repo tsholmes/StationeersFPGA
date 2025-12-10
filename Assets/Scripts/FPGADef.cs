@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Assets.Scripts.Objects.Electrical;
-using Assets.Scripts.Util;
-using UnityEngine;
 
 namespace fpgamod
 {
@@ -25,50 +22,33 @@ namespace fpgamod
     static FPGADef()
     {
       for (var i = 0; i < InputCount; i++)
-      {
         InputNames[i] = $"in{i:D2}";
-      }
       for (var i = 0; i < GateCount; i++)
-      {
         GateNames[i] = $"gate{i:D2}";
-      }
       for (var i = 0; i < LutCount; i++)
-      {
         LutNames[i] = $"lut{i:D2}";
-      }
     }
 
     public static string GetName(byte address)
     {
       if (IsIOAddress(address))
-      {
         return InputNames[address - InputOffset];
-      }
       if (IsGateAddress(address))
-      {
         return GateNames[address - GateOffset];
-      }
       if (IsLutAddress(address))
-      {
         return LutNames[address - LutOffset];
-      }
       return "invalid";
     }
 
     private List<ConfigLine> _configLines = new List<ConfigLine>();
     private int[] _configIndex = new int[AddressCount];
 
-    public static FPGADef NewEmpty()
-    {
-      return new FPGADef();
-    }
+    public static FPGADef NewEmpty() => new();
 
     public static FPGADef Parse(string raw)
     {
       if (string.IsNullOrWhiteSpace(raw))
-      {
         return NewEmpty();
-      }
       var lines = raw.Split('\n');
       var cfgLines = new List<ConfigLine>();
       foreach (var line in lines)
@@ -78,48 +58,34 @@ namespace fpgamod
       return new FPGADef(cfgLines);
     }
 
-    public static bool IsIOAddress(byte address)
-    {
-      return address >= InputOffset && address < InputOffset + InputCount;
-    }
+    public static bool IsIOAddress(byte address) =>
+      address >= InputOffset && address < InputOffset + InputCount;
 
-    public static bool IsGateAddress(byte address)
-    {
-      return address >= GateOffset && address < GateOffset + GateCount;
-    }
+    public static bool IsGateAddress(byte address) =>
+      address >= GateOffset && address < GateOffset + GateCount;
 
-    public static bool IsLutAddress(byte address)
-    {
-      return address >= LutOffset && address < LutOffset + LutCount;
-    }
+    public static bool IsLutAddress(byte address) =>
+      address >= LutOffset && address < LutOffset + LutCount;
 
-    public static bool IsValidAddress(byte address)
-    {
-      return IsIOAddress(address) || IsGateAddress(address) | IsLutAddress(address);
-    }
+    public static bool IsValidAddress(byte address) =>
+      IsIOAddress(address) || IsGateAddress(address) | IsLutAddress(address);
 
     private static void AssertGateAddress(byte address)
     {
       if (!IsGateAddress(address))
-      {
         throw new ArgumentOutOfRangeException();
-      }
     }
 
     private static void AssertLutAddress(byte address)
     {
       if (!IsLutAddress(address))
-      {
         throw new ArgumentOutOfRangeException();
-      }
     }
 
     private static void AssertValidAddress(byte address)
     {
       if (!IsValidAddress(address))
-      {
         throw new IndexOutOfRangeException();
-      }
     }
 
     private FPGADef()
@@ -256,9 +222,7 @@ namespace fpgamod
       AssertGateAddress(address);
       var idx = this._configIndex[address];
       if (idx == -1)
-      {
         return 0;
-      }
       return this._configLines[idx].GateInput1;
     }
 
@@ -267,9 +231,7 @@ namespace fpgamod
       AssertGateAddress(address);
       var idx = this._configIndex[address];
       if (idx == -1)
-      {
         return 0;
-      }
       return this._configLines[idx].GateInput2;
     }
 
@@ -304,9 +266,7 @@ namespace fpgamod
       AssertLutAddress(address);
       var idx = this._configIndex[address];
       if (idx == -1)
-      {
         return 0;
-      }
       return this._configLines[idx].LutValue;
     }
 
@@ -362,9 +322,7 @@ namespace fpgamod
         var cfg = this._configLines[i];
         cfg.RegenRaw(labels);
         if (i != 0)
-        {
           sb.Append('\n');
-        }
         sb.Append(cfg.RawLine);
       }
       return sb.ToString();
@@ -376,9 +334,7 @@ namespace fpgamod
       {
         var idx = this._configIndex[address];
         if (idx == -1)
-        {
           return 0f;
-        }
         var cfg = this._configLines[idx];
         if (cfg.RawGate && !string.IsNullOrEmpty(cfg.RawGateOp))
         {
@@ -391,16 +347,12 @@ namespace fpgamod
       {
         var idx = this._configIndex[address];
         if (idx == -1)
-        {
           return 0f;
-        }
         var cfg = this._configLines[idx];
         return cfg.LutValue;
       }
       else
-      {
         throw new ArgumentOutOfRangeException();
-      }
     }
 
     public void SetGateRaw(byte address, long value)
@@ -477,9 +429,7 @@ namespace fpgamod
       public void ForceValid()
       {
         if (!this.HasValidAddress || this.IsDuplicate)
-        {
           throw new InvalidOperationException();
-        }
         if (this.IsValid && !this.RawGate)
         {
           // nothing to do
@@ -487,9 +437,7 @@ namespace fpgamod
         }
         this.RawDirty = true;
         if (!this.IsValid)
-        {
           this.Error = null;
-        }
 
         if (IsIOAddress(this.Address))
         {
@@ -532,22 +480,16 @@ namespace fpgamod
         }
 
         if (this.GateInput1Mode == ValueMode.Label && this.RawGateInput1 != labels[this.GateInput1])
-        {
           this.RawDirty = true;
-        }
         if (this.GateInput2Mode == ValueMode.Label && this.RawGateInput2 != labels[this.GateInput2])
-        {
           this.RawDirty = true;
-        }
       }
 
       public void RegenRaw(string[] labels)
       {
         this.CheckNameChange(labels);
         if (!this.RawDirty)
-        {
           return;
-        }
         var sb = new StringBuilder();
         switch (this.AddressMode)
         {
@@ -632,9 +574,7 @@ namespace fpgamod
           // lut.
           sb.Append(' ');
           if (string.IsNullOrEmpty(this.LutRawValue))
-          {
             this.LutRawValue = $"{this.LutValue:G}";
-          }
           sb.Append(this.LutRawValue);
         }
 
@@ -653,30 +593,21 @@ namespace fpgamod
         if (info.Operands >= 1 && this.GateInput1Mode == ValueMode.Label)
         {
           if (!labelToAddress.TryGetValue(this.RawGateInput1, out this.GateInput1))
-          {
             this.Error = Error.UnknownLabel;
-          }
         }
         if (info.Operands >= 2 && this.GateInput2Mode == ValueMode.Label)
         {
           if (!labelToAddress.TryGetValue(this.RawGateInput2, out this.GateInput2))
-          {
             this.Error = Error.UnknownLabel;
-          }
         }
       }
 
       public static ConfigLine Parse(string line)
       {
-        var cfg = new ConfigLine
-        {
-          RawLine = line,
-        };
+        var cfg = new ConfigLine { RawLine = line };
         var hashIndex = line.IndexOf('#');
         if (hashIndex == -1)
-        {
           hashIndex = line.Length;
-        }
 
         var parts = line[..hashIndex].Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0)
@@ -692,18 +623,12 @@ namespace fpgamod
 
         cfg.HasValidAddress = ParseAddress(apart, out cfg.AddressMode, out cfg.Address);
         if (!cfg.HasValidAddress)
-        {
           cfg.Error = Error.InvalidAddress;
-        }
         if (labelSep != -1)
-        {
           cfg.Label = fullApart[(labelSep + 1)..];
-        }
 
         if (!cfg.IsValid)
-        {
           return cfg;
-        }
 
         if (IsIOAddress(cfg.Address))
         {
@@ -718,20 +643,14 @@ namespace fpgamod
         {
           // gate
           if (parts.Length < 2)
-          {
             cfg.Error = Error.MissingGateOp;
-          }
           else
           {
             cfg.RawGateOp = parts[1];
             if (parts.Length >= 3)
-            {
               cfg.RawGateInput1 = parts[2];
-            }
             if (parts.Length >= 4)
-            {
               cfg.RawGateInput2 = parts[3];
-            }
 
             if (cfg.RawGateOp.StartsWith("$"))
             {
@@ -739,20 +658,14 @@ namespace fpgamod
               cfg.RawGate = true;
               var rawValid = uint.TryParse(cfg.RawGateOp[1..], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var rawGateVal);
               if (!rawValid)
-              {
                 cfg.Error = Error.InvalidRawGate;
-              }
               cfg.GateOp = (FPGAOp)(rawGateVal & 0xFF);
               cfg.GateInput1 = (byte)((rawGateVal >> 8) & 0xFF);
               cfg.GateInput2 = (byte)((rawGateVal >> 16) & 0xFF);
               if (cfg.GateOp >= FPGAOps.Count || !IsValidAddress(cfg.GateInput1) || !IsValidAddress(cfg.GateInput2) || (rawGateVal & 0xFFFFFF) != rawGateVal)
-              {
                 cfg.Error = Error.InvalidRawGate;
-              }
               if (parts.Length > 2)
-              {
                 cfg.Error = Error.TooManyValues;
-              }
             }
             else if (FPGAOps.SymbolToOp.TryGetValue(cfg.RawGateOp, out cfg.GateOp))
             {
@@ -777,18 +690,12 @@ namespace fpgamod
               }
 
               if (parts.Length < info.Operands + 2)
-              {
                 cfg.Error = Error.MissingGateInput;
-              }
               else if (parts.Length > info.Operands + 2)
-              {
                 cfg.Error = Error.TooManyValues;
-              }
             }
             else
-            {
               cfg.Error = Error.InvalidGateOp;
-            }
           }
         }
         else if (IsLutAddress(cfg.Address))
@@ -798,9 +705,7 @@ namespace fpgamod
           {
             cfg.LutRawValue = parts[1];
             if (!double.TryParse(parts[1], out cfg.LutValue))
-            {
               cfg.Error = Error.InvalidLutValue;
-            }
           }
           if (parts.Length < 2)
           {
@@ -808,14 +713,10 @@ namespace fpgamod
             cfg.Error = Error.MissingLutValue;
           }
           else if (parts.Length > 2)
-          {
             cfg.Error = Error.TooManyValues;
-          }
         }
         else
-        {
           cfg.Error = Error.InvalidAddress;
-        }
 
         return cfg;
       }

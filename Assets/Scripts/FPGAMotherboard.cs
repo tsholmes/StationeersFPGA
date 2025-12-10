@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts;
 using Assets.Scripts.GridSystem;
 using Assets.Scripts.Networking;
@@ -8,7 +10,7 @@ using Assets.Scripts.Objects.Electrical;
 using Assets.Scripts.Objects.Items;
 using Assets.Scripts.Objects.Pipes;
 using Cysharp.Threading.Tasks;
-using StationeersMods.Interface;
+using LaunchPadBooster.Utils;
 using UnityEngine;
 using UnityUI = UnityEngine.UI;
 
@@ -41,7 +43,7 @@ namespace fpgamod
 
     public void PatchOnLoad()
     {
-      var existing = StationeersModsUtility.FindPrefab("MotherboardProgrammableChip");
+      var existing = PrefabUtils.FindPrefab<Thing>("MotherboardProgrammableChip");
 
       this.Thumbnail = existing.Thumbnail;
       this.Blueprint = existing.Blueprint;
@@ -78,9 +80,7 @@ namespace fpgamod
     {
       base.DeserializeSave(baseData);
       if (baseData is not FPGAMotherboardSaveData saveData)
-      {
         return;
-      }
       this.SelectedHolderIndex = saveData.SelectedHolderIndex;
       this.RawConfig = saveData.RawConfig;
       this.InputOpen = saveData.InputOpen;
@@ -92,9 +92,7 @@ namespace fpgamod
     {
       base.InitialiseSaveData(ref baseData);
       if (baseData is not FPGAMotherboardSaveData saveData)
-      {
         return;
-      }
       saveData.SelectedHolderIndex = this.SelectedHolderIndex;
       saveData.RawConfig = this.RawConfig;
       saveData.InputOpen = this.InputOpen;
@@ -130,9 +128,7 @@ namespace fpgamod
     public string GetSelectedFPGAHolderName()
     {
       if (!this.IsSelectedIndexValid)
-      {
         return "";
-      }
       return this.ConnectedFPGAHolders[this.SelectedHolderIndex].DisplayName;
     }
 
@@ -149,38 +145,75 @@ namespace fpgamod
     private bool _loadingConnected;
     private async UniTaskVoid LoadConnectedAsync()
     {
-      // modeled after ProgrammableChipMotherboard.HandleDeviceListChange to hopefully minimize errors
-      if (!GameManager.IsMainThread)
-        await UniTask.SwitchToMainThread();
-      var cancelToken = this.GetCancellationTokenOnDestroy();
-      while (GameManager.GameState != GameState.Running)
+      try
+      {
+        // modeled after ProgrammableChipMotherboard.HandleDeviceListChange to hopefully minimize errors
+        if (!GameManager.IsMainThread)
+          await UniTask.SwitchToMainThread();
+        var cancelToken = this.GetCancellationTokenOnDestroy();
+        while (GameManager.GameState != GameState.Running)
+          await UniTask.NextFrame(cancelToken);
         await UniTask.NextFrame(cancelToken);
-      await UniTask.NextFrame(cancelToken);
-      var current = this.IsSelectedIndexValid ? this.ConnectedFPGAHolders[this.SelectedHolderIndex] : null;
-      this.ConnectedFPGAHolders.Clear();
-      if (this.ParentComputer == null || !this.ParentComputer.AsThing().isActiveAndEnabled)
-      {
-        return;
-      }
-      var deviceList = this.ParentComputer.DeviceList();
-      deviceList.Sort((a, b) => a.DisplayName.CompareTo(b.DisplayName));
-      foreach (var device in this.ParentComputer.DeviceList())
-      {
-        if (device is not IFPGAHolder holder)
+        var current = this.IsSelectedIndexValid ? this.ConnectedFPGAHolders[this.SelectedHolderIndex] : null;
+        this.ConnectedFPGAHolders.Clear();
+        if (this.ParentComputer == null || !this.ParentComputer.AsThing().isActiveAndEnabled)
+          return;
+        var deviceList = this.ParentComputer.DeviceList();
+        deviceList.Sort((a, b) => a.DisplayName.CompareTo(b.DisplayName));
+        void addHolder(IFPGAHolder holder)
         {
+          if (holder == current)
+            this.SelectedHolderIndex = this.ConnectedFPGAHolders.Count;
+          this.ConnectedFPGAHolders.Add(holder);
+        }
+        foreach (var device in this.ParentComputer.DeviceList())
+        {
+          if (device is IFPGAHolder holder)
+            addHolder(holder);
+          else if (device.GetType().Name == "ChipStackBase")
+          {
+            foreach (var stackHolder in GetFPGARacks(device))
+              addHolder(stackHolder);
+          }
+        }
+        if (this.SelectedHolderIndex < 0 || this.SelectedHolderIndex >= this.ConnectedFPGAHolders.Count)
+          this.SelectedHolderIndex = 0;
+      }
+      finally
+      {
+        this._loadingConnected = false;
+      }
+    }
+
+    private static IEnumerable<IFPGAHolder> GetFPGARacks(ILogicable chipStack)
+    {
+      IEnumerable<ILogicable> allRacks;
+      try
+      {
+        var levels = ((IEnumerable)chipStack.GetType().GetProperty("Levels").GetValue(chipStack)).OfType<ILogicable>();
+        allRacks = levels.SelectMany(l => ((IEnumerable)l.GetType().GetField("Racks").GetValue(l)).OfType<ILogicable>());
+      }
+      catch
+      {
+        // just drop any errors here if this compatibility breaks
+        yield break;
+      }
+      foreach (var rack in allRacks)
+      {
+        if (rack == null || rack.GetType().Name != "ChipStackFPGARack")
+          continue;
+        IFPGAHolder holder;
+        try
+        {
+          holder = new FPGAHolderChipStackAdapter(chipStack, rack);
+        }
+        catch
+        {
+          // ignore error
           continue;
         }
-        if (holder == current)
-        {
-          this.SelectedHolderIndex = this.ConnectedFPGAHolders.Count;
-        }
-        this.ConnectedFPGAHolders.Add(holder);
+        yield return holder;
       }
-      if (this.SelectedHolderIndex < 0 || this.SelectedHolderIndex >= this.ConnectedFPGAHolders.Count)
-      {
-        this.SelectedHolderIndex = 0;
-      }
-      this._loadingConnected = false;
     }
 
     public void Import()
@@ -191,40 +224,30 @@ namespace fpgamod
         this.RawConfig = chip?.RawConfig ?? "";
       }
       else
-      {
         this.RawConfig = "";
-      }
     }
 
     public void Export()
     {
       if (!this.IsSelectedIndexValid)
-      {
         return;
-      }
       var chip = this.ConnectedFPGAHolders[this.SelectedHolderIndex].GetFPGAChip();
       if (chip != null)
-      {
         chip.RawConfig = this.RawConfig;
-      }
     }
 
     public override void BuildUpdate(RocketBinaryWriter writer, ushort networkUpdateType)
     {
       base.BuildUpdate(writer, networkUpdateType);
       if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
-      {
         writer.WriteAscii(this.GetSourceCode());
-      }
     }
 
     public override void ProcessUpdate(RocketBinaryReader reader, ushort networkUpdateType)
     {
       base.ProcessUpdate(reader, networkUpdateType);
       if (Thing.IsNetworkUpdateRequired(FLAG_RAWCONFIG, networkUpdateType))
-      {
         this.SetSourceCode(new string(reader.ReadChars()));
-      }
     }
 
     public override void SerializeOnJoin(RocketBinaryWriter writer)
@@ -245,9 +268,7 @@ namespace fpgamod
     public void SendUpdate()
     {
       if (NetworkManager.IsClient)
-      {
         ISourceCode.SendSourceCodeToServer(this.GetSourceCode(), this.ReferenceId);
-      }
       else
       {
         if (!NetworkManager.IsServer)
@@ -256,14 +277,8 @@ namespace fpgamod
       }
     }
 
-    public void SetSourceCode(string sourceCode)
-    {
-      this._rawConfig = sourceCode;
-    }
+    public void SetSourceCode(string sourceCode) => this._rawConfig = sourceCode;
 
-    public AsciiString GetSourceCode()
-    {
-      return AsciiString.Parse(this.RawConfig);
-    }
+    public AsciiString GetSourceCode() => AsciiString.Parse(this.RawConfig);
   }
 }

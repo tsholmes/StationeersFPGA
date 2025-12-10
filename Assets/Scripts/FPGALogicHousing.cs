@@ -1,14 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.Electrical;
-using Assets.Scripts.Objects.Motherboards;
 using Assets.Scripts.Objects.Pipes;
+using LaunchPadBooster.Utils;
 using Objects.Electrical;
-using StationeersMods.Interface;
-using UnityEditor;
 using UnityEngine;
 
 namespace fpgamod
@@ -31,13 +27,13 @@ namespace fpgamod
 
     public void PatchOnLoad()
     {
-      this.BuildStates[0].Tool.ToolExit = StationeersModsUtility.FindTool(StationeersTool.DRILL);
+      this.SetExitTool(PrefabNames.Drill);
       this._FPGASlot.Type = FPGAChip.FPGASlotType;
     }
 
     public override void OnPrefabLoad()
     {
-      var src = StationeersModsUtility.FindPrefab("StructureCircuitHousing");
+      var src = PrefabUtils.FindPrefab<Structure>("StructureCircuitHousing");
       var srcOnOff = src.transform.Find("OnOffNoShadow");
       var onOff = GameObject.Instantiate(srcOnOff, this.transform);
       this.Interactables[2].Collider = onOff.GetComponent<SphereCollider>();
@@ -51,25 +47,14 @@ namespace fpgamod
       base.OnPrefabLoad();
     }
 
-    public Vector2? GetUV(GameObject obj)
+    public Vector2? GetUV(GameObject obj) => this.RelativePath(obj) switch
     {
-      if (obj == this.transform.Find("FPGAHousing_logicbase/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 0, 6); // match IC housing base
-      }
-      if (obj == this.transform.Find("PowerSymbol/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 2, 5); // match builtin power symbol
-      }
-      if (obj == this.transform.Find("DataSymbol/default").gameObject)
-      {
-        return FPGAMod.UVTile(16, 1, 4); // match builtin data symbol
-      }
-      if (obj == this.transform.Find("FPGAHousing_pins/default").gameObject) {
-        return FPGAMod.UVTile(64, 3, 7);
-      }
-      return null;
-    }
+      "FPGAHousing_logicbase/default" => ModUtils.UVTile(16, 0, 6), // match IC housing base
+      "PowerSymbol/default" => ModUtils.UVTile(16, 2, 5), // match builtin power symbol
+      "DataSymbol/default" => ModUtils.UVTile(16, 1, 4), // match builtin data symbol }
+      "FPGAHousing_pins/default" => ModUtils.UVTile(64, 3, 7),
+      _ => null,
+    };
 
     public override ThingSaveData SerializeSave()
     {
@@ -122,9 +107,7 @@ namespace fpgamod
     public void ClearMemory()
     {
       if (this.FPGAChip == null)
-      {
         throw new NullReferenceException();
-      }
       this.FPGAChip.ClearMemory();
     }
 
@@ -137,19 +120,14 @@ namespace fpgamod
     public double ReadMemory(int address)
     {
       if (this.FPGAChip == null)
-      {
         throw new NullReferenceException();
-      }
       if (address < 0)
-      {
         throw new StackUnderflowException();
-      }
       if (address > 255)
-      {
         throw new StackOverflowException();
-      }
       var addr = (byte)address;
-      if (FPGADef.IsIOAddress(addr) && (!this.OnOff || !this.Powered)) {
+      if (FPGADef.IsIOAddress(addr) && (!this.OnOff || !this.Powered))
+      {
         // we only require power for reading gate outputs. everything else is just configuration.
         return 0;
       }
@@ -159,13 +137,9 @@ namespace fpgamod
     public void WriteMemory(int address, double value)
     {
       if (address < 0)
-      {
         throw new StackUnderflowException();
-      }
       if (address > 255)
-      {
         throw new StackOverflowException();
-      }
       var addr = (byte)address;
       if (FPGADef.IsIOAddress(addr))
       {
@@ -174,29 +148,19 @@ namespace fpgamod
         return;
       }
       if (this.FPGAChip == null)
-      {
         throw new NullReferenceException();
-      }
       this.FPGAChip.WriteMemory(address, value);
     }
 
     public double GetFPGAInputPin(int index)
     {
       if (index < 0 || index >= FPGADef.InputCount)
-      {
         return double.NaN;
-      }
       return this._inputValues[index];
     }
 
-    public long GetFPGAInputModCount()
-    {
-      return this._inputModCount;
-    }
+    public long GetFPGAInputModCount() => this._inputModCount;
 
-    public FPGAChip GetFPGAChip()
-    {
-      return this.FPGAChip;
-    }
+    public FPGAChip GetFPGAChip() => this.FPGAChip;
   }
 }
