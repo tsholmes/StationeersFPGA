@@ -12,7 +12,7 @@ namespace fpgamod
 {
   public class FPGAMod : MonoBehaviour
   {
-    public static Mod MOD = new("FPGA", "0.2.0");
+    public static Mod MOD = new("FPGA", "0.2.1");
 
     public void OnLoaded(List<GameObject> prefabs)
     {

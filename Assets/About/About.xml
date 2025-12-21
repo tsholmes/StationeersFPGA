@@ -2,7 +2,7 @@
 <ModMetadata xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>FPGA</Name>
   <Author>tom_is_unlucky</Author>
-  <Version>0.2.0</Version>
+  <Version>0.2.1</Version>
   <!-- Steam description using steam styling tags for Steam workshop page -->
   <Description>[h1]FPGA[/h1]
     This requires BepInEx and [url=https://github.com/StationeersLaunchPad/StationeersLaunchPad]StationeersLaunchPad[/url].
@@ -37,10 +37,9 @@
   </Description>
   <!-- All contents of ChangeLog should be changed for each publication for Steam workshop page -->
   <ChangeLog>
-    [h3]Version 0.2.0:[/h3]
+    [h3]Version 0.2.1:[/h3]
     [list]
-    [*]Fix UniTask error for Respawn Update
-    [*]Allow import/export from FPGA chips in Advanced Computing Chip Stack
+    [*]Fix error when executing bit operations
     [/list]
   </ChangeLog>
   <WorkshopHandle>3457324551</WorkshopHandle>
