@@ -155,18 +155,18 @@ namespace fpgamod
     private static double OpMax(double val1, double val2) => val1 > val2 ? val1 : val2;
     private static double OpLogicAnd(double val1, double val2) => val1 != 0 && val2 != 0 ? 1 : 0;
     private static double OpLogicOr(double val1, double val2) => val1 != 0 || val2 != 0 ? 1 : 0;
-    private static Func<double, double, double> OpBitAnd = BinaryBitOp((val1, val2) => val1 & val2);
-    private static Func<double, double, double> OpBitOr = BinaryBitOp((val1, val2) => val1 | val2);
-    private static Func<double, double, double> OpBitXor = BinaryBitOp((val1, val2) => val1 ^ val2);
-    private static Func<double, double, double> OpBitNand = BinaryBitOp((val1, val2) => ~(val1 & val2));
-    private static Func<double, double, double> OpBitNor = BinaryBitOp((val1, val2) => ~(val1 | val2));
-    private static Func<double, double, double> OpBitSla = BinaryBitOp((val1, val2) => val1 << (int)val2);
-    private static Func<double, double, double> OpBitSll = BinaryBitOp((val1, val2) => val1 << (int)val2);
-    private static Func<double, double, double> OpBitSra = BinaryBitOp((val1, val2) => val1 >> (int)val2);
-    private static Func<double, double, double> OpBitSrl = BinaryBitOp((val1, val2) => val1 >> (int)val2, firstSigned: false);
+    private static double OpBitAnd(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 & val2);
+    private static double OpBitOr(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 | val2);
+    private static double OpBitXor(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 ^ val2);
+    private static double OpBitNand(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => ~(val1 & val2));
+    private static double OpBitNor(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => ~(val1 | val2));
+    private static double OpBitSla(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 << (int)val2);
+    private static double OpBitSll(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 << (int)val2);
+    private static double OpBitSra(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 >> (int)val2);
+    private static double OpBitSrl(double val1, double val2) => BinaryBitOp(val1, val2, (val1, val2) => val1 >> (int)val2, firstSigned: false);
 
-    private static Func<double, double, double> BinaryBitOp(Func<long, long, long> op, bool firstSigned = true) =>
-      (val1, val2) => ProgrammableChip.LongToDouble(
+    private static double BinaryBitOp(double val1, double val2, Func<long, long, long> op, bool firstSigned = true) =>
+      ProgrammableChip.LongToDouble(
         op(ProgrammableChip.DoubleToLong(val1, firstSigned),
         ProgrammableChip.DoubleToLong(val2, true)));
   }
